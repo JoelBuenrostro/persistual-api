@@ -1,0 +1,33 @@
+{
+  "compilerOptions": {
+    /* Visit https://aka.ms/tsconfig to read more about this file */
+
+    /* Language and Environment */
+    "target": "ES2020",
+    "module": "commonjs",
+
+    /* Root and Output Directories */
+    "rootDir": ".", // Incluye todo el proyecto (src + tests)
+    "outDir": "dist",
+
+    /* Strictness and Interoperability */
+    "strict": true,
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "forceConsistentCasingInFileNames": true,
+
+    /* Module Resolution */
+    "moduleResolution": "node",
+
+    /* Emit Options */
+    "skipLibCheck": true
+  },
+  "include": [
+    "src", // Código fuente
+    "tests" // Pruebas
+  ],
+  "exclude": [
+    "node_modules", // Dependencias
+    "dist" // Salidas compiladas
+  ]
+}
