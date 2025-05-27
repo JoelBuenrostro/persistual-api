@@ -1,8 +1,10 @@
 ---
-name: Reporte
+name: Reporte de errores
 about: Reporta un error en Persistual
-title: '[BUG]'
+title: "[BUG]"
 labels: bug
+assignees: ''
+
 ---
 
 **Descripción**
