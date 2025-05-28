@@ -1,0 +1,40 @@
+name: CI
+
+# Se dispara en cada push o PR contra main
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Descarga de repositorio
+        uses: actions/checkout@v4
+
+      - name: Configura Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+
+      - name: Cache npm
+        uses: actions/cache@v3
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+
+      - name: Instala dependencias
+        run: npm ci
+
+      - name: Ejecuta ESLint
+        run: npm run lint
+
+      - name: Ejecuta pruebas Jest
+        run: npm run test
+        env:
+          CI: true

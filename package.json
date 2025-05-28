@@ -1,7 +1,7 @@
 {
   "name": "persistual-api",
-  "version": "1.0.0",
-  "description": "",
+  "version": "0.1.0",
+  "description": "API open-source Node.js/TypeScript para gestión de hábitos y cálculo de rachas, con autenticación JWT, métricas y CI/CD. ",
   "main": "index.js",
   "scripts": {
     "dev": "ts-node-dev --respawn --transpile-only src/index.ts",
@@ -16,8 +16,8 @@
     "url": "git+https://github.com/JoelBuenrostro/persistual-api.git"
   },
   "keywords": [],
-  "author": "",
-  "license": "ISC",
+  "author": "Joel Buenrostro",
+  "license": "MIT",
   "type": "commonjs",
   "bugs": {
     "url": "https://github.com/JoelBuenrostro/persistual-api/issues"
