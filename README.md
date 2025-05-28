@@ -23,4 +23,8 @@ npm run dev
 
 ## Cómo Contribuir
 
-Lee CONTRIBUTING.md y respeta el Code of Conduct.
+1. Lee el [Código de Conducta](./CODE_OF_CONDUCT.md).  
+2. Sigue la guía en [CONTRIBUTING.md](./CONTRIBUTING.md).  
+3. Usa nuestras plantillas de issues y pull requests en `.github/`.  
+
+¡Gracias por tu aporte!
