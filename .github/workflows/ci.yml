@@ -1,4 +1,6 @@
 name: CI
+permissions:
+  contents: read
 
 # Se dispara en cada push o PR contra main
 on:
