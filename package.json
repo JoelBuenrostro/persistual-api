@@ -25,14 +25,23 @@
   "homepage": "https://github.com/JoelBuenrostro/persistual-api#readme",
   "dependencies": {
     "bcryptjs": "^3.0.2",
+    "class-transformer": "^0.5.1",
+    "class-validator": "^0.14.2",
     "express": "^5.1.0",
-    "jsonwebtoken": "^9.0.2"
+    "jsonwebtoken": "^9.0.2",
+    "reflect-metadata": "^0.2.2",
+    "swagger-ui-express": "^5.0.1",
+    "uuid": "^11.1.0",
+    "yamljs": "^0.3.0"
   },
   "devDependencies": {
     "@types/express": "^5.0.2",
     "@types/jest": "^29.5.14",
     "@types/node": "^22.15.21",
     "@types/supertest": "^6.0.3",
+    "@types/swagger-ui-express": "^4.1.8",
+    "@types/uuid": "^10.0.0",
+    "@types/yamljs": "^0.2.34",
     "@typescript-eslint/eslint-plugin": "^8.32.1",
     "@typescript-eslint/parser": "^8.32.1",
     "eslint": "^8.57.1",

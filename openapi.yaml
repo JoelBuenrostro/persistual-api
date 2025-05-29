@@ -1,0 +1,70 @@
+openapi: 3.0.1
+info:
+  title: Persistual API
+  version: 0.1.0
+servers:
+  - url: http://localhost:3000
+paths:
+  /api/auth/register:
+    post:
+      summary: Registra un nuevo usuario
+      tags:
+        - auth
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserDTO'
+      responses:
+        '201':
+          description: Usuario creado exitosamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '400':
+          description: Error de validación o email duplicado
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - type: object
+                    properties:
+                      errors:
+                        type: array
+                        items:
+                          type: string
+                  - type: object
+                    properties:
+                      message:
+                        type: string
+
+components:
+  schemas:
+    UserDTO:
+      type: object
+      required:
+        - email
+        - password
+      properties:
+        email:
+          type: string
+          format: email
+          example: user@example.com
+        password:
+          type: string
+          minLength: 6
+          example: secret123
+
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: 550e8400-e29b-41d4-a716-446655440000
+        email:
+          type: string
+          format: email
+          example: user@example.com
