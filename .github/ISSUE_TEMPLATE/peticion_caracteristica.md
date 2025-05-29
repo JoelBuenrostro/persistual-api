@@ -1,10 +1,9 @@
 ---
 name: Peticion de caracteristica nueva
 about: Sugiere una nueva funcionalidad
-title: "[FEATURE]"
+title: '[FEATURE]'
 labels: mejora
 assignees: ''
-
 ---
 
 **Descripción**  

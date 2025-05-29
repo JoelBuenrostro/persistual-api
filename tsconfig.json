@@ -16,6 +16,10 @@
     "allowSyntheticDefaultImports": true,
     "forceConsistentCasingInFileNames": true,
 
+    /* Type Checking */
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
+
     /* Module Resolution */
     "moduleResolution": "node",
 
