@@ -40,6 +40,34 @@ paths:
                       message:
                         type: string
 
+  /api/auth/login:
+    post:
+      summary: Autentica un usuario y devuelve JWT
+      tags:
+        - auth
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginDTO'
+      responses:
+        '200':
+          description: Tokens emitidos
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  accessToken:
+                    type: string
+                  refreshToken:
+                    type: string
+        '400':
+          description: Error de validación
+        '401':
+          description: Credenciales inválidas
+
 components:
   schemas:
     UserDTO:
@@ -68,3 +96,13 @@ components:
           type: string
           format: email
           example: user@example.com
+
+    LoginDTO:
+      type: object
+      required: [email, password]
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string

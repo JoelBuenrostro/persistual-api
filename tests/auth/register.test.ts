@@ -27,6 +27,6 @@ describe('POST /api/auth/register', () => {
       .post('/api/auth/register')
       .send({ email: 'dup@example.com', password: 'secret123' });
     expect(res2.status).toBe(400);
-    expect(res2.body.message).toBe('Email already in use');
+    expect(res2.body.message).toBe('Email en uso');
   });
 });
