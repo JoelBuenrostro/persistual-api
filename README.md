@@ -7,7 +7,7 @@
 
 API open-source Node.js/TypeScript para gestión de hábitos y cálculo de rachas, con autenticación JWT, métricas y CI/CD.
 
-## Inicio rapido
+## Getting Started
 
 Clona el repositorio e inicia la aplicación:
 
@@ -15,11 +15,13 @@ Clona el repositorio e inicia la aplicación:
 git clone https://github.com/JoelBuenrostro/persistual-api.git
 cd persistual-api
 npm install
-npm run dev       # Levanta el servidor en http://localhost:3000
-npm run test      # Ejecuta Jest con cobertura
-npm run lint      # Ejecuta ESLint
-npm run format    # Formatea con Prettier
+npm run dev
+npm run test
+npm run lint
+npm run format
 ```
+
+El servidor por defecto arranca en <http://localhost:3000>
 
 ## Documentación interactiva
 
@@ -59,9 +61,7 @@ Registra un nuevo usuario.
 
   ```json
   {
-    "errors": [
-      "El email no es válido"
-    ]
+    "errors": ["El email no es válido"]
   }
   ```
 
@@ -69,18 +69,58 @@ Registra un nuevo usuario.
 
   ```json
   {
-    "message": "Email already in use"
+    "message": "Email en uso"
+  }
+  ```
+
+### POST /api/auth/login
+
+Autentica un usuario registrado y devuelve tokens JWT.
+
+**Request Body**
+
+```json
+{
+  "email": "user@example.com",
+  "password": "secret123"
+}
+```
+
+**Responses**
+
+- **200 OK**
+
+  ```json
+  {
+    "accessToken": "<token_jwt>",
+    "refreshToken": "<token_refresh>"
+  }
+  ```
+
+- **400 Bad Request** (validación)
+
+  ```json
+  {
+    "errors": ["El email no es válido"]
+  }
+  ```
+
+- **401 Unauthorized** (credenciales incorrectas)
+
+  ```json
+  {
+    "message": "Email o contraseña invalida"
   }
   ```
 
 ## Cómo Contribuir
 
 1. Lee el [Código de Conducta](./CODE_OF_CONDUCT.md).
-2. Consulta la guía en [CONTRIBUTING](./CONTRIBUTING.md).
+2. Consulta la guía en [CONTRIBUTING.md](./CONTRIBUTING.md).
 3. Usa las plantillas de issues y pull requests en `.github/`.
 
 ¡Gracias por tu contribución!
 
-## Licencia
+## License
 
-Este proyecto está bajo la Licencia MIT. Consulta el archivo [LICENSE](./LICENSE.md) para más detalles.
+Este proyecto está bajo la Licencia MIT. Consulta el archivo [LICENSE](LICENSE) para más detalles.

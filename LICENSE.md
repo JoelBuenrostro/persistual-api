@@ -19,5 +19,5 @@ SERÁN RESPONSABLES DE NINGUNA RECLAMACIÓN, DAÑOS U OTRAS RESPONSABILIDADES, Y
 UNA ACCIÓN CONTRACTUAL, AGRAVIO O DE OTRO TIPO, QUE SURJAN DE, FUERA DE O EN CONEXIÓN
 CON EL SOFTWARE O EL USO U OTROS TRATOS EN EL SOFTWARE.
 
-> **Nota:** Esta es una **traducción no oficial** de la Licencia MIT. La versión original en inglés, jurídicamente vinculante, está disponible en  
-> <https://opensource.org/licenses/MIT>
+**Nota:** Esta es una **traducción no oficial** de la Licencia MIT. La versión original en inglés, jurídicamente vinculante, está disponible en  
+<https://opensource.org/licenses/MIT>
