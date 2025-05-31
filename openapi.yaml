@@ -65,8 +65,67 @@ paths:
                     type: string
         '400':
           description: Error de validación
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  errors:
+                    type: array
+                    items:
+                      type: string
         '401':
           description: Credenciales inválidas
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+
+  /api/auth/refresh:
+    post:
+      summary: Renueva el access token usando un refresh token
+      tags:
+        - auth
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                refreshToken:
+                  type: string
+      responses:
+        '200':
+          description: Nuevo access token emitido
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  accessToken:
+                    type: string
+        '400':
+          description: Petición mal formada (falta refreshToken)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+        '401':
+          description: Refresh token inválido o expirado
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
 
 components:
   schemas:
@@ -99,10 +158,14 @@ components:
 
     LoginDTO:
       type: object
-      required: [email, password]
+      required:
+        - email
+        - password
       properties:
         email:
           type: string
           format: email
+          example: user@example.com
         password:
           type: string
+          example: secret123
