@@ -30,7 +30,7 @@ describe('POST /api/auth/login', () => {
       .post('/api/auth/login')
       .send({ email: 'no@existe.com', password: 'cualquiera' });
     expect(res.status).toBe(401);
-    expect(res.body.message).toBe('Email o contraseña invalida');
+    expect(res.body.message).toBe('Email o contraseña inválida');
   });
 
   it('debe devolver 401 si la contraseña es incorrecta', async () => {
@@ -38,6 +38,6 @@ describe('POST /api/auth/login', () => {
       .post('/api/auth/login')
       .send({ email: user.email, password: 'wrongpass' });
     expect(res.status).toBe(401);
-    expect(res.body.message).toBe('Email o contraseña invalida');
+    expect(res.body.message).toBe('Email o contraseña inválida');
   });
 });

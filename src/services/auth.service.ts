@@ -21,25 +21,29 @@ export async function authenticateUser(
   email: string,
   password: string,
 ): Promise<{ accessToken: string; refreshToken: string }> {
+  // 1. Busca el usuario en el store
   const stored = userStore.get(email);
   if (!stored) {
     throw new HttpError('Email o contraseña inválida', 401);
   }
 
+  // 2. Verifica la contraseña usando bcrypt
   const valid = await bcrypt.compare(password, stored.passwordHash);
   if (!valid) {
     throw new HttpError('Email o contraseña inválida', 401);
   }
 
+  // 3. Carga variables de entorno y asigna defaults
   const jwtSecret = process.env.JWT_SECRET!;
   const refreshSecret = process.env.REFRESH_TOKEN_SECRET!;
   const accessTTL = process.env.ACCESS_TOKEN_TTL ?? '15m';
   const refreshTTL = process.env.REFRESH_TOKEN_TTL ?? '7d';
 
   if (!jwtSecret || !refreshSecret) {
-    throw new HttpError('JWT secrets not configured', 500);
+    throw new HttpError('Secrets de JWT no configurados', 500);
   }
 
+  // 4. Prepara opciones tipadas para TS
   const accessOptions: SignOptions = {
     expiresIn: accessTTL as unknown as SignOptions['expiresIn'],
   };
@@ -47,6 +51,7 @@ export async function authenticateUser(
     expiresIn: refreshTTL as unknown as SignOptions['expiresIn'],
   };
 
+  // 5. Genera accessToken y refreshToken
   const accessToken = jwt.sign(
     { sub: stored.id, email },
     jwtSecret,
@@ -59,7 +64,9 @@ export async function authenticateUser(
     refreshOptions,
   );
 
+  // 6. Almacena el refreshToken para validaciones futuras
   refreshTokenStore.set(stored.id, refreshToken);
+
   return { accessToken, refreshToken };
 }
 
@@ -72,6 +79,7 @@ export async function authenticateUser(
  */
 export function refreshAccessToken(token: string): { accessToken: string } {
   try {
+    // 1. Verifica firma y decodifica el payload
     const payload = jwt.verify(
       token,
       process.env.REFRESH_TOKEN_SECRET!,
@@ -79,23 +87,26 @@ export function refreshAccessToken(token: string): { accessToken: string } {
 
     const userId = payload.sub as string;
     if (!userId) {
-      throw new Error('Payload missing sub');
+      throw new Error();
     }
 
+    // 2. Comprueba que el refreshToken coincide con el almacenado
     const stored = refreshTokenStore.get(userId);
     if (stored !== token) {
-      throw new Error('Token mismatch');
+      throw new Error();
     }
 
+    // 3. Genera un nuevo access token
     const accessOptions: SignOptions = {
       expiresIn: process.env
         .ACCESS_TOKEN_TTL as unknown as SignOptions['expiresIn'],
     };
 
+    // Busca email del usuario
     const user = Array.from(userStore.values()).find(u => u.id === userId);
     const email = user?.email;
     if (!email) {
-      throw new Error('User not found');
+      throw new Error();
     }
 
     const accessToken = jwt.sign(

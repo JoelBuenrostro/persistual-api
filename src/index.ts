@@ -4,18 +4,32 @@ dotenv.config();
 import express from 'express';
 import swaggerUi from 'swagger-ui-express';
 import YAML from 'yamljs';
+import rateLimit from 'express-rate-limit';
 import authRoutes from './routes/auth.routes';
 
 const app = express();
 
-// Carga la especificación OpenAPI
-const openApiDocument = YAML.load('openapi.yaml');
+// 1. Configuración del rate limiter global
+const apiLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutos
+  max: 100, // máximo 100 peticiones por IP en esa ventana
+  standardHeaders: true, // devuelve info de límite en cabeceras RateLimit-*
+  legacyHeaders: false, // deshabilita cabeceras X-RateLimit-*
+  message: {
+    message:
+      'Has excedido el número de peticiones permitidas. Intenta de nuevo más tarde.',
+  },
+});
 
-// Middlewares
+// 2. Aplica el rate limiter a todas las rutas que empiezan con /api
+app.use('/api', apiLimiter);
+
+// Middlewares de parseo
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Docs
+// Documentación Swagger en /docs
+const openApiDocument = YAML.load('openapi.yaml');
 app.use('/docs', swaggerUi.serve, swaggerUi.setup(openApiDocument));
 
 // Health check
@@ -23,16 +37,16 @@ app.get('/healthz', (_req, res) => {
   res.sendStatus(200);
 });
 
-// API routes
+// Rutas de la API
 app.use('/api', authRoutes);
 
-// Exportamos la app para tests, sin arrancar el servidor aquí
+// Exportamos la app para tests
 export default app;
 
-// Sólo arrancamos el servidor si este archivo se ejecuta directamente
+// Si se ejecuta directamente, arranca el servidor
 if (require.main === module) {
   const port = process.env.PORT || 3000;
   // eslint-disable-next-line no-console
-  console.log(`⚡️ Server running on http://localhost:${port}`);
+  console.log(`⚡️ Server corriendo en http://localhost:${port}`);
   app.listen(port);
 }

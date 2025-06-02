@@ -20,9 +20,12 @@ describe('POST /api/auth/register', () => {
   });
 
   it('debe devolver 400 si email duplicado', async () => {
+    // Primer registro exitoso
     await request(app)
       .post('/api/auth/register')
       .send({ email: 'dup@example.com', password: 'secret123' });
+
+    // Segundo registro con el mismo email
     const res2 = await request(app)
       .post('/api/auth/register')
       .send({ email: 'dup@example.com', password: 'secret123' });

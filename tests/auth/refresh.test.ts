@@ -40,7 +40,7 @@ describe('POST /api/auth/refresh', () => {
     const res = await request(app).post('/api/auth/refresh').send({});
 
     expect(res.status).toBe(400);
-    expect(res.body.message).toBe('refreshToken must be provided');
+    expect(res.body.message).toBe('Debe proveer el refreshToken');
   });
 
   it('debe devolver 401 si el token está expirado', async () => {

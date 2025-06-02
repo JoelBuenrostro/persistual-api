@@ -41,7 +41,7 @@ export async function registerHandler(
       return;
     }
     // Fallback
-    res.status(500).json({ message: 'Internal server error' });
+    res.status(500).json({ message: 'Error interno del servidor' });
   }
 }
 
@@ -77,7 +77,7 @@ export async function loginHandler(req: Request, res: Response): Promise<void> {
       return;
     }
     // Fallback
-    res.status(500).json({ message: 'Internal server error' });
+    res.status(500).json({ message: 'Error interno del servidor' });
   }
 }
 
@@ -93,7 +93,7 @@ export async function refreshHandler(
 
     // Verifica que se envió el token en el body
     if (typeof refreshToken !== 'string') {
-      res.status(400).json({ message: 'refreshToken must be provided' });
+      res.status(400).json({ message: 'Debe proveer el refreshToken' });
       return;
     }
 
@@ -112,6 +112,6 @@ export async function refreshHandler(
       return;
     }
     // Fallback
-    res.status(500).json({ message: 'Internal server error' });
+    res.status(500).json({ message: 'Error interno del servidor' });
   }
 }
