@@ -1,8 +1,7 @@
-name: CI
+name: Build y Test Persistual API
 permissions:
   contents: read
 
-# Se dispara en cada push o PR contra main
 on:
   push:
     branches: [main]
@@ -15,6 +14,8 @@ jobs:
     env:
       JWT_SECRET: ${{ secrets.JWT_SECRET }}
       REFRESH_TOKEN_SECRET: ${{ secrets.REFRESH_TOKEN_SECRET }}
+      ACCESS_TOKEN_TTL: 15m
+      REFRESH_TOKEN_TTL: 7d
 
     steps:
       - name: Descarga de repositorio
@@ -38,6 +39,11 @@ jobs:
 
       - name: Ejecuta ESLint
         run: npm run lint
+
+      - name: Verificar env en CI
+        run: |
+          if [ -z "$JWT_SECRET" ]; then echo "❌ JWT_SECRET no existe"; exit 1; else echo "✅ JWT_SECRET OK"; fi
+          if [ -z "$REFRESH_TOKEN_SECRET" ]; then echo "❌ REFRESH_TOKEN_SECRET no existe"; exit 1; else echo "✅ REFRESH_TOKEN_SECRET OK"; fi
 
       - name: Ejecuta pruebas Jest
         run: npm run test
