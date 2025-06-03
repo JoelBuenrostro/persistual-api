@@ -6,6 +6,7 @@ import swaggerUi from 'swagger-ui-express';
 import YAML from 'yamljs';
 import rateLimit from 'express-rate-limit';
 import authRoutes from './routes/auth.routes';
+import habitRoutes from './routes/habit.routes';
 
 const app = express();
 
@@ -39,6 +40,9 @@ app.get('/healthz', (_req, res) => {
 
 // Rutas de la API
 app.use('/api', authRoutes);
+
+// Rutas de hábitos (POST /api/habits, etc.)
+app.use('/api/habits', habitRoutes);
 
 // Exportamos la app para tests
 export default app;
