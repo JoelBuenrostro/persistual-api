@@ -4,6 +4,7 @@ import { validateOrReject, ValidationError } from 'class-validator';
 import { CreateHabitDTO } from '../models/HabitDTO';
 import { createHabit } from '../services/habit.service';
 import { HttpError } from '../services/user.service';
+import { getHabitsByUser } from '../services/habit.service';
 import { AuthRequest } from '../middlewares/auth.middleware';
 
 /**
@@ -46,6 +47,38 @@ export async function createHabitHandler(
       return;
     }
 
+    res.status(500).json({ message: 'Error interno del servidor' });
+  }
+}
+
+/**
+ * Maneja GET /api/habits
+ * Devuelve la lista de hábitos del usuario autenticado.
+ */
+export async function getHabitsHandler(
+  req: AuthRequest,
+  res: Response,
+): Promise<void> {
+  try {
+    // 1. Extraer userId del token (inyectado por el middleware)
+    const userId = req.user!.id;
+
+    // 2. Llamar al servicio para obtener hábitos de este usuario
+    const habits = getHabitsByUser(userId);
+
+    // 3. Responder con 200 OK y el array de hábitos
+    res.status(200).json(habits);
+  } catch (err: unknown) {
+    // Solo esperamos errores muy particulares aquí,
+    // pero en teoría getHabitsByUser no lanza HttpError.
+    if (err instanceof HttpError) {
+      res.status(err.status).json({ message: err.message });
+      return;
+    }
+    if (err instanceof Error) {
+      res.status(500).json({ message: err.message });
+      return;
+    }
     res.status(500).json({ message: 'Error interno del servidor' });
   }
 }
