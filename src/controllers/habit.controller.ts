@@ -1,10 +1,15 @@
-import { Response } from 'express'; // Ya no importamos Request
+import { Response } from 'express';
 import { plainToInstance } from 'class-transformer';
 import { validateOrReject, ValidationError } from 'class-validator';
-import { CreateHabitDTO } from '../models/HabitDTO';
-import { createHabit } from '../services/habit.service';
+import { CreateHabitDTO, UpdateHabitDTO } from '../models/HabitDTO';
+import {
+  createHabit,
+  getHabitsByUser,
+  getHabitById,
+  updateHabit,
+  deleteHabit,
+} from '../services/habit.service';
 import { HttpError } from '../services/user.service';
-import { getHabitsByUser } from '../services/habit.service';
 import { AuthRequest } from '../middlewares/auth.middleware';
 
 /**
@@ -15,18 +20,12 @@ export async function createHabitHandler(
   res: Response,
 ): Promise<void> {
   try {
-    // 1. Extraer userId del token (inyectado por el middleware)
     const userId = req.user!.id;
-
-    // 2. Convertir y validar el DTO
     const dto = plainToInstance(CreateHabitDTO, req.body);
     await validateOrReject(dto);
-
-    // 3. Llamar al servicio para crear el hábito
     const habit = createHabit(userId, dto.name, dto.description);
     res.status(201).json(habit);
   } catch (err: unknown) {
-    // Errores de validación de class-validator
     if (Array.isArray(err) && err.every(e => e instanceof ValidationError)) {
       const errors = (err as ValidationError[]).flatMap(e =>
         e.constraints ? Object.values(e.constraints) : [],
@@ -34,43 +33,121 @@ export async function createHabitHandler(
       res.status(400).json({ errors });
       return;
     }
-
-    // Errores específicos (HttpError)
     if (err instanceof HttpError) {
       res.status(err.status).json({ message: err.message });
       return;
     }
-
-    // Cualquier otro error
     if (err instanceof Error) {
       res.status(500).json({ message: err.message });
       return;
     }
-
     res.status(500).json({ message: 'Error interno del servidor' });
   }
 }
 
 /**
  * Maneja GET /api/habits
- * Devuelve la lista de hábitos del usuario autenticado.
  */
 export async function getHabitsHandler(
   req: AuthRequest,
   res: Response,
 ): Promise<void> {
   try {
-    // 1. Extraer userId del token (inyectado por el middleware)
     const userId = req.user!.id;
-
-    // 2. Llamar al servicio para obtener hábitos de este usuario
     const habits = getHabitsByUser(userId);
-
-    // 3. Responder con 200 OK y el array de hábitos
     res.status(200).json(habits);
   } catch (err: unknown) {
-    // Solo esperamos errores muy particulares aquí,
-    // pero en teoría getHabitsByUser no lanza HttpError.
+    if (err instanceof HttpError) {
+      res.status(err.status).json({ message: err.message });
+      return;
+    }
+    if (err instanceof Error) {
+      res.status(500).json({ message: err.message });
+      return;
+    }
+    res.status(500).json({ message: 'Error interno del servidor' });
+  }
+}
+
+/**
+ * Maneja PUT /api/habits/:habitId
+ */
+export async function updateHabitHandler(
+  req: AuthRequest,
+  res: Response,
+): Promise<void> {
+  try {
+    const userId = req.user!.id;
+    const { habitId } = req.params;
+
+    // 1. Verificar existencia y pertenencia antes de validar el body
+    const existing = getHabitById(habitId);
+    if (!existing) {
+      res.status(404).json({ message: 'Hábito no encontrado' });
+      return;
+    }
+    if (existing.userId !== userId) {
+      res.status(403).json({ message: 'No autorizado' });
+      return;
+    }
+
+    // 2. Validar el DTO de actualización
+    const dto = plainToInstance(UpdateHabitDTO, req.body);
+    await validateOrReject(dto);
+
+    // 3. Actualizar y devolver
+    const updated = updateHabit(habitId, userId, {
+      name: dto.name,
+      description: dto.description,
+    });
+    res.status(200).json(updated);
+  } catch (err: unknown) {
+    if (Array.isArray(err) && err.every(e => e instanceof ValidationError)) {
+      const errors = (err as ValidationError[]).flatMap(e =>
+        e.constraints ? Object.values(e.constraints) : [],
+      );
+      res.status(400).json({ errors });
+      return;
+    }
+    if (err instanceof HttpError) {
+      res.status(err.status).json({ message: err.message });
+      return;
+    }
+    if (err instanceof Error) {
+      res.status(500).json({ message: err.message });
+      return;
+    }
+    res.status(500).json({ message: 'Error interno del servidor' });
+  }
+}
+
+/**
+ * Maneja DELETE /api/habits/:habitId
+ * (aunque C04 es la próxima historia, incluimos el handler para completitud)
+ */
+export async function deleteHabitHandler(
+  req: AuthRequest,
+  res: Response,
+): Promise<void> {
+  try {
+    const userId = req.user!.id;
+    const { habitId } = req.params;
+
+    // 1. Verificar existencia y pertenencia
+    const existing = getHabitById(habitId);
+    if (!existing) {
+      res.status(404).json({ message: 'Hábito no encontrado' });
+      return;
+    }
+    if (existing.userId !== userId) {
+      res.status(403).json({ message: 'No autorizado' });
+      return;
+    }
+
+    // 2. Eliminar y devolver 204
+    deleteHabit(habitId, userId);
+    res.sendStatus(204);
+  } catch (err: unknown) {
     if (err instanceof HttpError) {
       res.status(err.status).json({ message: err.message });
       return;

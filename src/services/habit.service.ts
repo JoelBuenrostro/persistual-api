@@ -10,17 +10,12 @@ export const habitStore = new Map<string, Habit>();
 
 /**
  * Crea un nuevo hábito para el usuario dado.
- * @param userId    ID del usuario autenticado
- * @param name      Nombre del hábito
- * @param description  Descripción (opcional)
- * @returns Habit creado
  */
 export function createHabit(
   userId: string,
   name: string,
   description?: string,
 ): Habit {
-  // Generar ID único
   const id = uuid();
   const newHabit: Habit = {
     id,
@@ -29,8 +24,6 @@ export function createHabit(
     description,
     createdAt: new Date().toISOString(),
   };
-
-  // Guardar en el Map
   habitStore.set(id, newHabit);
   return newHabit;
 }
@@ -50,9 +43,9 @@ export function getHabitById(habitId: string): Habit | undefined {
 }
 
 /**
- * Actualiza los campos name y/o description de un hábito ya existente.
- * Lanza HttpError(404) si no existe.
- * Lanza HttpError(403) si no pertenece al userId.
+ * Actualiza name/description de un hábito.
+ * - Lanza HttpError(404) si el hábito no existe.
+ * - Lanza HttpError(403) si el hábito no pertenece al userId.
  */
 export function updateHabit(
   habitId: string,
@@ -79,7 +72,9 @@ export function updateHabit(
 }
 
 /**
- * Elimina un hábito. Lanza HttpError(404) si no existe, 403 si no pertenece al userId.
+ * Elimina un hábito existente.
+ * - Lanza HttpError(404) si no existe.
+ * - Lanza HttpError(403) si no pertenece al userId.
  */
 export function deleteHabit(habitId: string, userId: string): void {
   const habit = habitStore.get(habitId);
