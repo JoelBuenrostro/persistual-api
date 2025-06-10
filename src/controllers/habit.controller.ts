@@ -123,7 +123,6 @@ export async function updateHabitHandler(
 
 /**
  * Maneja DELETE /api/habits/:habitId
- * (aunque C04 es la próxima historia, incluimos el handler para completitud)
  */
 export async function deleteHabitHandler(
   req: AuthRequest,
