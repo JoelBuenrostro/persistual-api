@@ -8,6 +8,7 @@ import {
   getHabitById,
   updateHabit,
   deleteHabit,
+  markHabit,
 } from '../services/habit.service';
 import { HttpError } from '../services/user.service';
 import { AuthRequest } from '../middlewares/auth.middleware';
@@ -146,6 +147,32 @@ export async function deleteHabitHandler(
     // 2. Eliminar y devolver 204
     deleteHabit(habitId, userId);
     res.sendStatus(204);
+  } catch (err: unknown) {
+    if (err instanceof HttpError) {
+      res.status(err.status).json({ message: err.message });
+      return;
+    }
+    if (err instanceof Error) {
+      res.status(500).json({ message: err.message });
+      return;
+    }
+    res.status(500).json({ message: 'Error interno del servidor' });
+  }
+}
+
+/**
+ * Maneja POST /api/habits/:habitId/check
+ */
+export async function markHabitHandler(
+  req: AuthRequest,
+  res: Response,
+): Promise<void> {
+  try {
+    const userId = req.user!.id;
+    const { habitId } = req.params;
+
+    const result = markHabit(userId, habitId);
+    res.status(200).json(result);
   } catch (err: unknown) {
     if (err instanceof HttpError) {
       res.status(err.status).json({ message: err.message });

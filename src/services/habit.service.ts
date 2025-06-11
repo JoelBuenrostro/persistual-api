@@ -1,3 +1,5 @@
+// src/services/habit.service.ts
+
 import { v4 as uuid } from 'uuid';
 import { Habit } from '../models/Habits';
 import { HttpError } from './user.service';
@@ -85,4 +87,50 @@ export function deleteHabit(habitId: string, userId: string): void {
     throw new HttpError('No autorizado', 403);
   }
   habitStore.delete(habitId);
+}
+
+/**
+ * Almacén en memoria para checks diarios.
+ * Clave: `${userId}:${habitId}`, Valor: Set de fechas "YYYY-MM-DD"
+ */
+const checkStore = new Map<string, Set<string>>();
+
+/**
+ * Marca un hábito como realizado hoy y calcula la racha actual.
+ * @throws HttpError(404) si el hábito no existe.
+ * @throws HttpError(403) si el hábito no pertenece al userId.
+ * @throws HttpError(400) si ya está marcado hoy.
+ */
+export function markHabit(
+  userId: string,
+  habitId: string,
+): { habitId: string; date: string; currentStreak: number } {
+  const habit = habitStore.get(habitId);
+  if (!habit) {
+    throw new HttpError('Hábito no encontrado', 404);
+  }
+  if (habit.userId !== userId) {
+    throw new HttpError('No autorizado', 403);
+  }
+
+  const today = new Date().toISOString().slice(0, 10);
+  const key = `${userId}:${habitId}`;
+  const dates = checkStore.get(key) ?? new Set<string>();
+
+  if (dates.has(today)) {
+    throw new HttpError('Ya has marcado este hábito hoy', 400);
+  }
+
+  dates.add(today);
+  checkStore.set(key, dates);
+
+  let streak = 1;
+  const cursor = new Date();
+  cursor.setDate(cursor.getDate() - 1);
+  while (dates.has(cursor.toISOString().slice(0, 10))) {
+    streak++;
+    cursor.setDate(cursor.getDate() - 1);
+  }
+
+  return { habitId, date: today, currentStreak: streak };
 }
