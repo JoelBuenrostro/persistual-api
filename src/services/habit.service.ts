@@ -1,5 +1,3 @@
-// src/services/habit.service.ts
-
 import { v4 as uuid } from 'uuid';
 import { Habit } from '../models/Habits';
 import { HttpError } from './user.service';
@@ -9,6 +7,12 @@ import { HttpError } from './user.service';
  * Clave: habitId, Valor: Habit
  */
 export const habitStore = new Map<string, Habit>();
+
+/**
+ * Almacena los “checks” diarios.
+ * Clave: `${userId}:${habitId}`, Valor: Set de fechas en formato 'YYYY-MM-DD'
+ */
+const checkStore = new Map<string, Set<string>>();
 
 /**
  * Crea un nuevo hábito para el usuario dado.
@@ -90,12 +94,6 @@ export function deleteHabit(habitId: string, userId: string): void {
 }
 
 /**
- * Almacén en memoria para checks diarios.
- * Clave: `${userId}:${habitId}`, Valor: Set de fechas "YYYY-MM-DD"
- */
-const checkStore = new Map<string, Set<string>>();
-
-/**
  * Marca un hábito como realizado hoy y calcula la racha actual.
  * @throws HttpError(404) si el hábito no existe.
  * @throws HttpError(403) si el hábito no pertenece al userId.
@@ -133,4 +131,43 @@ export function markHabit(
   }
 
   return { habitId, date: today, currentStreak: streak };
+}
+
+/**
+ * Consulta la racha actual de un hábito.
+ * @throws HttpError(404) si el hábito no existe.
+ * @throws HttpError(403) si el hábito no pertenece al userId.
+ */
+export function getHabitStreak(
+  userId: string,
+  habitId: string,
+): { habitId: string; currentStreak: number; lastCheck?: string } {
+  const habit = habitStore.get(habitId);
+  if (!habit) {
+    throw new HttpError('Hábito no encontrado', 404);
+  }
+  if (habit.userId !== userId) {
+    throw new HttpError('No autorizado', 403);
+  }
+
+  const key = `${userId}:${habitId}`;
+  const dates = checkStore.get(key) ?? new Set<string>();
+
+  if (dates.size === 0) {
+    return { habitId, currentStreak: 0 };
+  }
+
+  // Encontrar la última fecha marcada
+  const sortedDates = Array.from(dates).sort((a, b) => (a < b ? 1 : -1));
+  const lastCheck = sortedDates[0];
+
+  // Calcular racha desde hoy hacia atrás
+  let streak = 0;
+  const cursor = new Date();
+  while (dates.has(cursor.toISOString().slice(0, 10))) {
+    streak++;
+    cursor.setDate(cursor.getDate() - 1);
+  }
+
+  return { habitId, currentStreak: streak, lastCheck };
 }
