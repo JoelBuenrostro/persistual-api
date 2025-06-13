@@ -1,6 +1,6 @@
 {
   "name": "persistual-api",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "API open-source Node.js/TypeScript para gestión de hábitos y cálculo de rachas, con autenticación JWT, métricas y CI/CD. ",
   "main": "index.js",
   "scripts": {
