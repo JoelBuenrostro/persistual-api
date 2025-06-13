@@ -1,5 +1,3 @@
-// tests/habits/deleteHabit.test.ts
-
 import request from 'supertest';
 import app from '../../src/index';
 import { createUser } from '../../src/services/user.service';
