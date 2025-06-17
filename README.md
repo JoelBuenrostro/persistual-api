@@ -32,7 +32,8 @@ npm run test     # ejecuta Jest con coverage
 
 ## Documentación interactiva
 
-La UI de Swagger está disponible en  
+La UI de Swagger está disponible en
+
 ```
 http://localhost:3000/docs
 ```
@@ -41,7 +42,8 @@ http://localhost:3000/docs
 
 ## Autenticación
 
-Todos los endpoints de `/api/habits` requieren un header  
+Todos los endpoints de `/api/habits` requieren un header
+
 ```
 Authorization: Bearer <accessToken>
 ```
@@ -55,6 +57,7 @@ Authorization: Bearer <accessToken>
 Registra un nuevo usuario.
 
 **Request Body**
+
 ```json
 { "email": "user@example.com", "password": "secret123" }
 ```
@@ -62,11 +65,13 @@ Registra un nuevo usuario.
 **Responses**
 
 - **201 Created**
+
   ```json
   { "id": "uuid", "email": "user@example.com" }
   ```
 
 - **400 Bad Request** (validación)
+
   ```json
   { "errors": ["El email no es válido", …] }
   ```
@@ -83,6 +88,7 @@ Registra un nuevo usuario.
 Obtiene tokens JWT.
 
 **Request Body**
+
 ```json
 { "email": "user@example.com", "password": "secret123" }
 ```
@@ -90,11 +96,13 @@ Obtiene tokens JWT.
 **Responses**
 
 - **200 OK**
+
   ```json
   { "accessToken": "<jwt>", "refreshToken": "<refresh_jwt>" }
   ```
 
 - **400 Bad Request** (validación)
+
   ```json
   { "errors": ["El email no es válido", …] }
   ```
@@ -111,6 +119,7 @@ Obtiene tokens JWT.
 Renueva el access token usando el refresh token.
 
 **Request Body**
+
 ```json
 { "refreshToken": "<refresh_jwt>" }
 ```
@@ -118,11 +127,13 @@ Renueva el access token usando el refresh token.
 **Responses**
 
 - **200 OK**
+
   ```json
   { "accessToken": "<nuevo_jwt>" }
   ```
 
 - **400 Bad Request** (missing body)
+
   ```json
   { "message": "refreshToken must be provided" }
   ```
@@ -141,6 +152,7 @@ Renueva el access token usando el refresh token.
 Crea un nuevo hábito.
 
 **Request Body**
+
 ```json
 { "name": "leer diario", "description": "30 min al día" }
 ```
@@ -148,6 +160,7 @@ Crea un nuevo hábito.
 **Responses**
 
 - **201 Created**
+
   ```json
   {
     "id": "uuid",
@@ -183,15 +196,16 @@ Lista todos los hábitos del usuario.
 Actualiza nombre y/o descripción.
 
 **Request Body**
+
 ```json
-{ "name": "nuevo nombre", "description": "…"}
+{ "name": "nuevo nombre", "description": "…" }
 ```
 
 **Responses**
 
-- **200 OK** → objeto `Habit` actualizado.  
-- **400 Bad Request** (validación)  
-- **403 Forbidden** (no es tu hábito)  
+- **200 OK** → objeto `Habit` actualizado.
+- **400 Bad Request** (validación)
+- **403 Forbidden** (no es tu hábito)
 - **404 Not Found** (ID no existe)
 
 ---
@@ -202,8 +216,8 @@ Elimina un hábito.
 
 **Responses**
 
-- **204 No Content**  
-- **403 Forbidden** (no es tu hábito)  
+- **204 No Content**
+- **403 Forbidden** (no es tu hábito)
 - **404 Not Found** (ID no existe)
 
 ---
@@ -215,18 +229,19 @@ Marca el hábito como completado hoy y devuelve la racha.
 **Responses**
 
 - **200 OK**
+
   ```json
   { "habitId": "...", "date": "YYYY-MM-DD", "currentStreak": 3 }
   ```
 
-- **400 Bad Request** (ya marcado hoy)  
-- **403 Forbidden** / **404 Not Found**  
+- **400 Bad Request** (ya marcado hoy)
+- **403 Forbidden** / **404 Not Found**
 
 ---
 
 ### GET `/api/habits/:habitId/streak`
 
- consulta la racha actual sin alterar datos.
+consulta la racha actual sin alterar datos.
 
 **Responses**
 
@@ -235,6 +250,7 @@ Marca el hábito como completado hoy y devuelve la racha.
   { "habitId": "...", "currentStreak": 0 }
   ```
 - **200 OK** (con racha)
+
   ```json
   {
     "habitId": "...",
@@ -243,15 +259,15 @@ Marca el hábito como completado hoy y devuelve la racha.
   }
   ```
 
-- **403 Forbidden** / **404 Not Found**  
+- **403 Forbidden** / **404 Not Found**
 
 ---
 
 ## Cómo Contribuir
 
-1. Lee el [Código de Conducta](./CODE_OF_CONDUCT.md).  
-2. Consulta la guía en [CONTRIBUTING.md](./CONTRIBUTING.md).  
-3. Abre un Issue usando nuestras plantillas en `.github/ISSUE_TEMPLATE/`.  
+1. Lee el [Código de Conducta](./CODE_OF_CONDUCT.md).
+2. Consulta la guía en [CONTRIBUTING.md](./CONTRIBUTING.md).
+3. Abre un Issue usando nuestras plantillas en `.github/ISSUE_TEMPLATE/`.
 4. Envía tu Pull Request con checklist completado.
 
 ---

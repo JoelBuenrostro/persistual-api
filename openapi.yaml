@@ -1,171 +1,484 @@
-openapi: 3.0.1
+openapi: 3.0.3
 info:
   title: Persistual API
-  version: 0.1.0
+  version: '0.2.0'
+  description: API para gestión de hábitos y rachas con autenticación JWT
 servers:
   - url: http://localhost:3000
+    description: Servidor local
+
 paths:
+  /healthz:
+    get:
+      summary: Health check
+      description: Comprueba que el servicio está activo
+      responses:
+        '200':
+          description: OK
+
   /api/auth/register:
     post:
-      summary: Registra un nuevo usuario
-      tags:
-        - auth
+      summary: Registro de usuario
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/UserDTO'
+              $ref: '#/components/schemas/UserRegister'
       responses:
         '201':
-          description: Usuario creado exitosamente
+          description: Usuario registrado
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/User'
+                $ref: '#/components/schemas/UserResponse'
         '400':
-          description: Error de validación o email duplicado
-          content:
-            application/json:
-              schema:
-                oneOf:
-                  - type: object
-                    properties:
-                      errors:
-                        type: array
-                        items:
-                          type: string
-                  - type: object
-                    properties:
-                      message:
-                        type: string
+          $ref: '#/components/responses/BadRequest'
 
   /api/auth/login:
     post:
-      summary: Autentica un usuario y devuelve JWT
-      tags:
-        - auth
+      summary: Login de usuario
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/LoginDTO'
+              $ref: '#/components/schemas/UserLogin'
       responses:
         '200':
-          description: Tokens emitidos
+          description: Tokens de autenticación
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  accessToken:
-                    type: string
-                  refreshToken:
-                    type: string
+                $ref: '#/components/schemas/TokenResponse'
         '400':
-          description: Error de validación
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  errors:
-                    type: array
-                    items:
-                      type: string
+          $ref: '#/components/responses/BadRequest'
         '401':
-          description: Credenciales inválidas
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  message:
-                    type: string
+          $ref: '#/components/responses/Unauthorized'
 
   /api/auth/refresh:
     post:
-      summary: Renueva el access token usando un refresh token
-      tags:
-        - auth
+      summary: Renovación de access token
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              type: object
-              properties:
-                refreshToken:
-                  type: string
+              $ref: '#/components/schemas/RefreshRequest'
       responses:
         '200':
-          description: Nuevo access token emitido
+          description: Nuevo access token
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  accessToken:
-                    type: string
+                $ref: '#/components/schemas/AccessTokenOnly'
         '400':
-          description: Petición mal formada (falta refreshToken)
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  message:
-                    type: string
+          $ref: '#/components/responses/BadRequest'
         '401':
-          description: Refresh token inválido o expirado
+          $ref: '#/components/responses/Unauthorized'
+
+  /api/habits:
+    get:
+      summary: Lista hábitos del usuario autenticado
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Lista de hábitos
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  message:
-                    type: string
+                type: array
+                items:
+                  $ref: '#/components/schemas/Habit'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+    post:
+      summary: Crea un nuevo hábito
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/HabitCreate'
+      responses:
+        '201':
+          description: Hábito creado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Habit'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /api/habits/{habitId}:
+    put:
+      summary: Actualiza un hábito
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: habitId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/HabitUpdate'
+      responses:
+        '200':
+          description: Hábito actualizado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Habit'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    delete:
+      summary: Elimina un hábito
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: habitId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Hábito eliminado
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /api/habits/{habitId}/check:
+    post:
+      summary: Marca un hábito para hoy
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: habitId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Hábito marcado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CheckResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /api/habits/{habitId}/streak:
+    get:
+      summary: Obtiene la racha actual de un hábito
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: habitId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Racha actual
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StreakResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /api/categories:
+    post:
+      summary: Crea una nueva categoría
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CategoryDTO'
+      responses:
+        '201':
+          description: Categoría creada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Category'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+    get:
+      summary: Lista todas las categorías
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Lista de categorías
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Category'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /api/categories/{id}:
+    get:
+      summary: Obtiene una categoría por ID
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Categoría encontrada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Category'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    put:
+      summary: Actualiza una categoría existente
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CategoryDTO'
+      responses:
+        '200':
+          description: Categoría actualizada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Category'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    delete:
+      summary: Elimina una categoría
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Categoría eliminada
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
 
 components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
   schemas:
-    UserDTO:
+    UserRegister:
       type: object
-      required:
-        - email
-        - password
+      required: [email, password]
       properties:
         email:
           type: string
           format: email
-          example: user@example.com
         password:
           type: string
           minLength: 6
-          example: secret123
 
-    User:
+    UserLogin:
+      type: object
+      required: [email, password]
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          minLength: 1
+
+    UserResponse:
       type: object
       properties:
         id:
           type: string
-          format: uuid
-          example: 550e8400-e29b-41d4-a716-446655440000
         email:
           type: string
-          format: email
-          example: user@example.com
 
-    LoginDTO:
+    TokenResponse:
       type: object
-      required:
-        - email
-        - password
       properties:
-        email:
+        accessToken:
           type: string
-          format: email
-          example: user@example.com
-        password:
+        refreshToken:
           type: string
-          example: secret123
+
+    RefreshRequest:
+      type: object
+      required: [refreshToken]
+      properties:
+        refreshToken:
+          type: string
+
+    AccessTokenOnly:
+      type: object
+      properties:
+        accessToken:
+          type: string
+
+    HabitCreate:
+      type: object
+      required: [name]
+      properties:
+        name:
+          type: string
+          minLength: 3
+        description:
+          type: string
+
+    HabitUpdate:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 3
+        description:
+          type: string
+
+    Habit:
+      allOf:
+        - $ref: '#/components/schemas/HabitCreate'
+        - type: object
+          properties:
+            id:
+              type: string
+            userId:
+              type: string
+            createdAt:
+              type: string
+            description:
+              type: string
+
+    CheckResponse:
+      type: object
+      properties:
+        habitId:
+          type: string
+        date:
+          type: string
+          format: date
+        currentStreak:
+          type: integer
+
+    StreakResponse:
+      type: object
+      properties:
+        habitId:
+          type: string
+        currentStreak:
+          type: integer
+        lastCheck:
+          type: string
+          format: date
+
+    CategoryDTO:
+      type: object
+      required: [name]
+      properties:
+        name:
+          type: string
+          minLength: 3
+
+    Category:
+      allOf:
+        - $ref: '#/components/schemas/CategoryDTO'
+        - type: object
+          properties:
+            id:
+              type: string
+            createdAt:
+              type: string
+
+  responses:
+    BadRequest:
+      description: Petición inválida
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              errors:
+                type: array
+                items:
+                  type: string
+    Unauthorized:
+      description: No autorizado
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              message:
+                type: string
+    NotFound:
+      description: No encontrado
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              message:
+                type: string
