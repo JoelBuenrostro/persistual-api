@@ -6,13 +6,18 @@ import {
   updateCategoryHandler,
   deleteCategoryHandler,
 } from '../controllers/category.controller';
+import { authMiddleware } from '../middlewares/auth.middleware';
 
 const router = Router();
 
-router.post('/categories', createCategoryHandler);
-router.get('/categories', getCategoriesHandler);
-router.get('/categories/:id', getCategoryByIdHandler);
-router.put('/categories/:id', updateCategoryHandler);
-router.delete('/categories/:id', deleteCategoryHandler);
+/**
+ * Rutas para gestión de categorías.
+ * Todas protegidas con JWT (authMiddleware).
+ */
+router.post('/categories', authMiddleware, createCategoryHandler);
+router.get('/categories', authMiddleware, getCategoriesHandler);
+router.get('/categories/:id', authMiddleware, getCategoryByIdHandler);
+router.put('/categories/:id', authMiddleware, updateCategoryHandler);
+router.delete('/categories/:id', authMiddleware, deleteCategoryHandler);
 
 export default router;

@@ -34,7 +34,7 @@ npm run test     # ejecuta Jest con coverage
 
 La UI de Swagger está disponible en
 
-```
+```text
 http://localhost:3000/docs
 ```
 
@@ -44,7 +44,7 @@ http://localhost:3000/docs
 
 Todos los endpoints de `/api/habits` requieren un header
 
-```
+```shell
 Authorization: Bearer <accessToken>
 ```
 

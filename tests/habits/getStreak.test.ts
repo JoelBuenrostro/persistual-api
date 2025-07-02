@@ -1,32 +1,32 @@
 import request from 'supertest';
+import jwt from 'jsonwebtoken';
 import app from '../../src/index';
 import { createUser } from '../../src/services/user.service';
-import { createHabit, habitStore } from '../../src/services/habit.service';
-import { markHabit } from '../../src/services/habit.service';
-import jwt from 'jsonwebtoken';
+import { authenticateUser } from '../../src/services/auth.service';
+import { createHabit, checkHabit } from '../../src/services/habit.service';
 
 describe('C06: GET /api/habits/:habitId/streak', () => {
+  const user = { email: 'suser@test.com', password: 'secret123' };
   let authToken: string;
   let userId: string;
   let habitId: string;
 
   beforeAll(async () => {
-    const user = await createUser('streak@test.com', 'secret123');
-    userId = user.id;
-    authToken = jwt.sign(
-      { sub: userId, email: 'streak@test.com' },
+    // Crear usuario y obtener token
+    await createUser(user.email, user.password);
+    authToken = (await authenticateUser(user.email, user.password)).accessToken;
+    const payload = jwt.verify(
+      authToken,
       process.env.JWT_SECRET!,
-      { expiresIn: '1h' },
-    );
-  });
+    ) as jwt.JwtPayload;
+    userId = payload.sub as string;
 
-  beforeEach(() => {
-    const habit = createHabit(userId, 'leer diario');
+    // Crear hábito inicial
+    const habit = await createHabit(userId, {
+      name: 'hacer ejercicio',
+      description: 'Descripción',
+    });
     habitId = habit.id;
-  });
-
-  afterEach(() => {
-    habitStore.clear();
   });
 
   it('debe devolver 401 si falta token', async () => {
@@ -36,22 +36,18 @@ describe('C06: GET /api/habits/:habitId/streak', () => {
   });
 
   it('debe devolver 404 si el hábito no existe', async () => {
-    habitStore.clear();
     const res = await request(app)
-      .get(`/api/habits/no-existe-uuid/streak`)
+      .get(`/api/habits/nonexistent/streak`)
       .set('Authorization', `Bearer ${authToken}`);
     expect(res.status).toBe(404);
     expect(res.body.message).toBe('Hábito no encontrado');
   });
 
   it('debe devolver 403 si hábito de otro usuario', async () => {
-    // Crear otro usuario y token
-    const other = await createUser('otro@test.com', 'secret123');
-    const otherToken = jwt.sign(
-      { sub: other.id, email: 'otro@test.com' },
-      process.env.JWT_SECRET!,
-      { expiresIn: '1h' },
-    );
+    // Creamos otro usuario
+    await createUser('otro@test.com', 'secret123');
+    const otherToken = (await authenticateUser('otro@test.com', 'secret123'))
+      .accessToken;
 
     const res = await request(app)
       .get(`/api/habits/${habitId}/streak`)
@@ -60,7 +56,7 @@ describe('C06: GET /api/habits/:habitId/streak', () => {
     expect(res.body.message).toBe('No autorizado');
   });
 
-  it('debe devolver 0 si no hay checks', async () => {
+  it('debe devolver racha=0 si no hay checks', async () => {
     const res = await request(app)
       .get(`/api/habits/${habitId}/streak`)
       .set('Authorization', `Bearer ${authToken}`);
@@ -69,8 +65,8 @@ describe('C06: GET /api/habits/:habitId/streak', () => {
   });
 
   it('debe devolver racha=1 tras un check', async () => {
-    // marcamos hoy
-    markHabit(userId, habitId);
+    // Marcamos el hábito hoy
+    await checkHabit(habitId, userId);
 
     const res = await request(app)
       .get(`/api/habits/${habitId}/streak`)

@@ -1,214 +1,160 @@
 import { Response } from 'express';
 import { plainToInstance } from 'class-transformer';
-import { validateOrReject, ValidationError } from 'class-validator';
+import { validateOrReject } from 'class-validator';
 import { CreateHabitDTO, UpdateHabitDTO } from '../models/HabitDTO';
 import {
   createHabit,
-  getHabitsByUser,
-  getHabitById,
+  getHabits,
   updateHabit,
   deleteHabit,
-  markHabit,
+  checkHabit,
   getHabitStreak,
 } from '../services/habit.service';
 import { HttpError } from '../services/user.service';
 import { AuthRequest } from '../middlewares/auth.middleware';
 
 /**
- * Maneja POST /api/habits
+ * C01: POST /api/habits
  */
 export async function createHabitHandler(
   req: AuthRequest,
   res: Response,
 ): Promise<void> {
   try {
-    const userId = req.user!.id;
     const dto = plainToInstance(CreateHabitDTO, req.body);
     await validateOrReject(dto);
-    const habit = createHabit(userId, dto.name, dto.description);
+
+    const userId = req.user!.sub as string;
+    const habit = await createHabit(userId, dto);
     res.status(201).json(habit);
   } catch (err: unknown) {
-    if (Array.isArray(err) && err.every(e => e instanceof ValidationError)) {
-      const errors = (err as ValidationError[]).flatMap(e =>
+    if (Array.isArray(err)) {
+      const errors = err.flatMap(e =>
         e.constraints ? Object.values(e.constraints) : [],
       );
       res.status(400).json({ errors });
-      return;
-    }
-    if (err instanceof HttpError) {
+    } else if (err instanceof HttpError) {
       res.status(err.status).json({ message: err.message });
-      return;
+    } else {
+      res.status(500).json({
+        message:
+          err instanceof Error ? err.message : 'Error interno del servidor',
+      });
     }
-    if (err instanceof Error) {
-      res.status(500).json({ message: err.message });
-      return;
-    }
-    res.status(500).json({ message: 'Error interno del servidor' });
   }
 }
 
 /**
- * Maneja GET /api/habits
+ * C02: GET /api/habits
  */
 export async function getHabitsHandler(
   req: AuthRequest,
   res: Response,
 ): Promise<void> {
   try {
-    const userId = req.user!.id;
-    const habits = getHabitsByUser(userId);
+    const userId = req.user!.sub as string;
+    const habits = await getHabits(userId);
     res.status(200).json(habits);
   } catch (err: unknown) {
     if (err instanceof HttpError) {
       res.status(err.status).json({ message: err.message });
-      return;
+    } else {
+      res.status(500).json({ message: 'Error interno del servidor' });
     }
-    if (err instanceof Error) {
-      res.status(500).json({ message: err.message });
-      return;
-    }
-    res.status(500).json({ message: 'Error interno del servidor' });
   }
 }
 
 /**
- * Maneja PUT /api/habits/:habitId
+ * C03: PUT /api/habits/:habitId
  */
 export async function updateHabitHandler(
   req: AuthRequest,
   res: Response,
 ): Promise<void> {
   try {
-    const userId = req.user!.id;
     const { habitId } = req.params;
-
-    // 1. Verificar existencia y pertenencia antes de validar el body
-    const existing = getHabitById(habitId);
-    if (!existing) {
-      res.status(404).json({ message: 'Hábito no encontrado' });
-      return;
-    }
-    if (existing.userId !== userId) {
-      res.status(403).json({ message: 'No autorizado' });
-      return;
-    }
-
-    // 2. Validar el DTO de actualización
     const dto = plainToInstance(UpdateHabitDTO, req.body);
     await validateOrReject(dto);
 
-    // 3. Actualizar y devolver
-    const updated = updateHabit(habitId, userId, {
-      name: dto.name,
-      description: dto.description,
-    });
+    const userId = req.user!.sub as string;
+    const updated = await updateHabit(habitId, userId, dto);
     res.status(200).json(updated);
   } catch (err: unknown) {
-    if (Array.isArray(err) && err.every(e => e instanceof ValidationError)) {
-      const errors = (err as ValidationError[]).flatMap(e =>
+    if (Array.isArray(err)) {
+      const errors = err.flatMap(e =>
         e.constraints ? Object.values(e.constraints) : [],
       );
       res.status(400).json({ errors });
-      return;
-    }
-    if (err instanceof HttpError) {
+    } else if (err instanceof HttpError) {
       res.status(err.status).json({ message: err.message });
-      return;
+    } else {
+      res.status(500).json({
+        message:
+          err instanceof Error ? err.message : 'Error interno del servidor',
+      });
     }
-    if (err instanceof Error) {
-      res.status(500).json({ message: err.message });
-      return;
-    }
-    res.status(500).json({ message: 'Error interno del servidor' });
   }
 }
 
 /**
- * Maneja DELETE /api/habits/:habitId
+ * C04: DELETE /api/habits/:habitId
  */
 export async function deleteHabitHandler(
   req: AuthRequest,
   res: Response,
 ): Promise<void> {
   try {
-    const userId = req.user!.id;
     const { habitId } = req.params;
-
-    // 1. Verificar existencia y pertenencia
-    const existing = getHabitById(habitId);
-    if (!existing) {
-      res.status(404).json({ message: 'Hábito no encontrado' });
-      return;
-    }
-    if (existing.userId !== userId) {
-      res.status(403).json({ message: 'No autorizado' });
-      return;
-    }
-
-    // 2. Eliminar y devolver 204
-    deleteHabit(habitId, userId);
+    const userId = req.user!.sub as string;
+    await deleteHabit(habitId, userId);
     res.sendStatus(204);
   } catch (err: unknown) {
     if (err instanceof HttpError) {
       res.status(err.status).json({ message: err.message });
-      return;
+    } else {
+      res.status(500).json({ message: 'Error interno del servidor' });
     }
-    if (err instanceof Error) {
-      res.status(500).json({ message: err.message });
-      return;
-    }
-    res.status(500).json({ message: 'Error interno del servidor' });
   }
 }
 
 /**
- * Maneja POST /api/habits/:habitId/check
+ * C05: POST /api/habits/:habitId/check
  */
-export async function markHabitHandler(
+export async function checkHabitHandler(
   req: AuthRequest,
   res: Response,
 ): Promise<void> {
   try {
-    const userId = req.user!.id;
     const { habitId } = req.params;
-
-    const result = markHabit(userId, habitId);
+    const userId = req.user!.sub as string;
+    const result = await checkHabit(habitId, userId);
     res.status(200).json(result);
   } catch (err: unknown) {
     if (err instanceof HttpError) {
       res.status(err.status).json({ message: err.message });
-      return;
+    } else {
+      res.status(500).json({ message: 'Error interno del servidor' });
     }
-    if (err instanceof Error) {
-      res.status(500).json({ message: err.message });
-      return;
-    }
-    res.status(500).json({ message: 'Error interno del servidor' });
   }
 }
 
 /**
- * Maneja GET /api/habits/:habitId/streak
+ * C06: GET /api/habits/:habitId/streak
  */
 export async function getHabitStreakHandler(
   req: AuthRequest,
   res: Response,
 ): Promise<void> {
   try {
-    const userId = req.user!.id;
     const { habitId } = req.params;
-
-    const result = getHabitStreak(userId, habitId);
-    res.status(200).json(result);
+    const userId = req.user!.sub as string;
+    const streak = await getHabitStreak(habitId, userId);
+    res.status(200).json(streak);
   } catch (err: unknown) {
     if (err instanceof HttpError) {
       res.status(err.status).json({ message: err.message });
-      return;
+    } else {
+      res.status(500).json({ message: 'Error interno del servidor' });
     }
-    if (err instanceof Error) {
-      res.status(500).json({ message: err.message });
-      return;
-    }
-    res.status(500).json({ message: 'Error interno del servidor' });
   }
 }
