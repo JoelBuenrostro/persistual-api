@@ -7,13 +7,13 @@ import {
 
 const router = Router();
 
-// Registro de usuarios
+// Registro de nuevos usuarios
 router.post('/auth/register', registerHandler);
 
-// Login (obtención de access & refresh tokens)
+// Login: genera access & refresh tokens
 router.post('/auth/login', loginHandler);
 
-// Renovar access token usando un refresh token
+// Refresh: renueva el access token
 router.post('/auth/refresh', refreshHandler);
 
 export default router;

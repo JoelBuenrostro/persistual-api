@@ -1,32 +1,19 @@
 import 'reflect-metadata';
 import dotenv from 'dotenv';
 dotenv.config();
-import express from 'express';
+
+import express, { Request, Response, NextFunction } from 'express';
 import swaggerUi from 'swagger-ui-express';
 import YAML from 'yamljs';
-import rateLimit from 'express-rate-limit';
+
 import authRoutes from './routes/auth.routes';
 import habitRoutes from './routes/habit.routes';
 import categoryRoutes from './routes/category.routes';
+import { HttpError } from './services/user.service';
 
 const app = express();
 
-// 1. Configuración del rate limiter global
-const apiLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutos
-  max: 100, // máximo 100 peticiones por IP en esa ventana
-  standardHeaders: true, // devuelve info de límite en cabeceras RateLimit-*
-  legacyHeaders: false, // deshabilita cabeceras X-RateLimit-*
-  message: {
-    message:
-      'Has excedido el número de peticiones permitidas. Intenta de nuevo más tarde.',
-  },
-});
-
-// 2. Aplica el rate limiter a todas las rutas que empiezan con /api
-app.use('/api', apiLimiter);
-
-// Middlewares de parseo
+// Middlewares de parsing
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
@@ -39,22 +26,31 @@ app.get('/healthz', (_req, res) => {
   res.sendStatus(200);
 });
 
-// Rutas de la API
+// Montaje de rutas
 app.use('/api', authRoutes);
-
-// Rutas de hábitos (POST /api/habits, etc.)
-app.use('/api/habits', habitRoutes);
-
-// Rutas de categorías (POST /api/categories, etc.)
+app.use('/api', habitRoutes);
 app.use('/api', categoryRoutes);
 
-// Exportamos la app para tests
+// Manejador global de errores
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+app.use(
+  (err: unknown, _req: Request, res: Response, _next: NextFunction): void => {
+    if (err instanceof HttpError) {
+      res.status(err.status).json({ message: err.message });
+    } else {
+      console.error(err);
+      res.status(500).json({ message: 'Error interno del servidor' });
+    }
+  },
+);
+
+// Export para tests (no arranca el servidor aquí)
 export default app;
 
-// Si se ejecuta directamente, arranca el servidor
+// Si se ejecuta directamente, arrancar el servidor
 if (require.main === module) {
   const port = process.env.PORT || 3000;
   // eslint-disable-next-line no-console
-  console.log(`⚡️ Server corriendo en http://localhost:${port}`);
+  console.log(`⚡️ Server running on http://localhost:${port}`);
   app.listen(port);
 }

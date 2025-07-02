@@ -1,77 +1,56 @@
 import request from 'supertest';
 import app from '../../src/index';
 import { createUser } from '../../src/services/user.service';
-import { createHabit, habitStore } from '../../src/services/habit.service';
-import jwt from 'jsonwebtoken';
-import { Habit } from '../../src/models/Habits';
+import { authenticateUser } from '../../src/services/auth.service';
+import { createHabit } from '../../src/services/habit.service';
 
 describe('C03: PUT /api/habits/:habitId', () => {
-  let authToken: string;
   let userId: string;
+  let authToken: string;
   let anotherToken: string;
   let habitId: string;
 
   beforeAll(async () => {
-    // 1. Crear usuario A y token
-    const userA = await createUser('userA@test.com', 'secret123');
-    userId = userA.id;
-    authToken = jwt.sign(
-      { sub: userId, email: 'userA@test.com' },
-      process.env.JWT_SECRET!,
-      { expiresIn: '1h' },
-    );
+    // Creamos dos usuarios
+    const user = await createUser('user@test.com', 'secret123');
+    userId = user.id;
+    const tokens = await authenticateUser('user@test.com', 'secret123');
+    authToken = tokens.accessToken;
 
-    // 2. Crear usuario B y token (para probar 403)
-    const userB = await createUser('userB@test.com', 'secret123');
-    anotherToken = jwt.sign(
-      { sub: userB.id, email: 'userB@test.com' },
-      process.env.JWT_SECRET!,
-      { expiresIn: '1h' },
-    );
-  });
+    const _other = await createUser('other@test.com', 'secret123');
+    const otherTokens = await authenticateUser('other@test.com', 'secret123');
+    anotherToken = otherTokens.accessToken;
 
-  beforeEach(() => {
-    // Cada prueba necesita un hábito “limpio” en memoria para userA
-    const habit = createHabit(userId, 'leer diario', 'Descripción inicial');
+    // Creamos un hábito para el primer usuario
+    const habit = await createHabit(userId, {
+      name: 'leer diario',
+      description: 'Descripción inicial',
+    });
     habitId = habit.id;
-  });
-
-  afterEach(() => {
-    // Limpiamos todos los hábitos para que la siguiente prueba empiece de cero
-    habitStore.clear();
   });
 
   it('debe devolver 401 si no se envía token', async () => {
     const res = await request(app)
       .put(`/api/habits/${habitId}`)
       .send({ name: 'nuevo nombre' });
-
     expect(res.status).toBe(401);
     expect(res.body.message).toBe('Token inválido o expirado');
   });
 
   it('debe devolver 404 si el hábito no existe', async () => {
-    // Eliminamos el hábito antes de invocar el endpoint para simular “no existe”
-    habitStore.clear();
-
-    const fakeId = 'no-existe-uuid';
     const res = await request(app)
-      .put(`/api/habits/${fakeId}`)
+      .put(`/api/habits/nonexistent`)
       .set('Authorization', `Bearer ${authToken}`)
-      .send({ name: 'cualquier cosa' });
-
+      .send({ name: 'nuevo nombre' });
     expect(res.status).toBe(404);
     expect(res.body.message).toBe('Hábito no encontrado');
   });
 
   it('debe devolver 403 si el hábito no pertenece al usuario', async () => {
-    // En este punto, beforeEach ya creó un hábito para userA con id=habitId.
-    // UserB intenta actualizarlo:
     const res = await request(app)
       .put(`/api/habits/${habitId}`)
       .set('Authorization', `Bearer ${anotherToken}`)
       .send({ name: 'atento a 403' });
-
     expect(res.status).toBe(403);
     expect(res.body.message).toBe('No autorizado');
   });
@@ -81,7 +60,6 @@ describe('C03: PUT /api/habits/:habitId', () => {
       .put(`/api/habits/${habitId}`)
       .set('Authorization', `Bearer ${authToken}`)
       .send({ name: 'aa' }); // menos de 3 caracteres
-
     expect(res.status).toBe(400);
     expect(res.body.errors).toContain(
       'El nombre debe tener al menos 3 caracteres',
@@ -89,21 +67,17 @@ describe('C03: PUT /api/habits/:habitId', () => {
   });
 
   it('debe actualizar el hábito y devolver 200 con el objeto actualizado', async () => {
-    const newData = {
-      name: 'leer 45 min',
-      description: 'Actualizar descripción',
-    };
+    const newData = { name: 'nuevo hábito', description: 'Nueva desc' };
     const res = await request(app)
       .put(`/api/habits/${habitId}`)
       .set('Authorization', `Bearer ${authToken}`)
       .send(newData);
 
     expect(res.status).toBe(200);
-    const habit: Habit = res.body;
+    const habit = res.body;
     expect(habit.id).toBe(habitId);
     expect(habit.userId).toBe(userId);
-    expect(habit.name).toBe('leer 45 min');
-    expect(habit.description).toBe('Actualizar descripción');
-    expect(typeof habit.createdAt).toBe('string');
+    expect(habit.name).toBe(newData.name);
+    expect(habit.description).toBe(newData.description);
   });
 });

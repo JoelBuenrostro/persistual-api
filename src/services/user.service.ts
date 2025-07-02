@@ -1,14 +1,23 @@
 import bcrypt from 'bcryptjs';
 import { v4 as uuid } from 'uuid';
 
+/**
+ * Representación interna de un usuario almacenado
+ */
 export interface StoredUser {
   id: string;
   email: string;
   passwordHash: string;
 }
 
+/**
+ * Almacén en memoria de usuarios: clave = email, valor = StoredUser
+ */
 export const userStore = new Map<string, StoredUser>();
 
+/**
+ * Error HTTP personalizado para tiros de estado y mensaje.
+ */
 export class HttpError extends Error {
   public readonly status: number;
 
@@ -21,8 +30,11 @@ export class HttpError extends Error {
 
 /**
  * Crea un nuevo usuario:
- * - Hashea la contraseña
- * - Lanza HttpError(400) si el email ya existe
+ * - Verifica que no exista ya (por email)
+ * - Hashea la contraseña con bcrypt
+ * - Guarda en userStore
+ *
+ * @throws HttpError(400) si el email ya está en uso
  */
 export async function createUser(
   email: string,

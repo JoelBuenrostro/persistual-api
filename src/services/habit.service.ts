@@ -1,63 +1,70 @@
-import { v4 as uuid } from 'uuid';
-import { Habit } from '../models/Habits';
+import { v4 as uuidv4 } from 'uuid';
 import { HttpError } from './user.service';
+import { CreateHabitDTO, UpdateHabitDTO } from '../models/HabitDTO';
+import { Habit } from '../models/Habits';
+
+/**
+ * Internamente guardamos, además de los datos del hábito, un array de fechas marcadas.
+ */
+interface StoredHabit extends Habit {
+  checks: string[];
+}
 
 /**
  * Almacén en memoria de hábitos.
- * Clave: habitId, Valor: Habit
  */
-export const habitStore = new Map<string, Habit>();
+export const habitStore = new Map<string, StoredHabit>();
 
 /**
- * Almacena los “checks” diarios.
- * Clave: `${userId}:${habitId}`, Valor: Set de fechas en formato 'YYYY-MM-DD'
+ * Crea un nuevo hábito para un usuario.
  */
-const checkStore = new Map<string, Set<string>>();
-
-/**
- * Crea un nuevo hábito para el usuario dado.
- */
-export function createHabit(
+export async function createHabit(
   userId: string,
-  name: string,
-  description?: string,
-): Habit {
-  const id = uuid();
-  const newHabit: Habit = {
+  dto: CreateHabitDTO,
+): Promise<Habit> {
+  const id = uuidv4();
+  const createdAt = new Date().toISOString();
+  const stored: StoredHabit = {
     id,
     userId,
-    name,
-    description,
-    createdAt: new Date().toISOString(),
+    name: dto.name,
+    description: dto.description,
+    createdAt,
+    checks: [],
   };
-  habitStore.set(id, newHabit);
-  return newHabit;
+  habitStore.set(id, stored);
+  return {
+    id,
+    userId,
+    name: stored.name,
+    description: stored.description,
+    createdAt,
+  };
 }
 
 /**
- * Recupera todos los hábitos de un usuario.
+ * Devuelve todos los hábitos de un usuario.
  */
-export function getHabitsByUser(userId: string): Habit[] {
-  return Array.from(habitStore.values()).filter(h => h.userId === userId);
+export async function getHabits(userId: string): Promise<Habit[]> {
+  return Array.from(habitStore.values())
+    .filter(h => h.userId === userId)
+    .map(({ id, userId: uid, name, description, createdAt }) => ({
+      id,
+      userId: uid,
+      name,
+      description,
+      createdAt,
+    }));
 }
 
 /**
- * Recupera un hábito por su ID.
+ * Actualiza un hábito (nombre y/o descripción).
  */
-export function getHabitById(habitId: string): Habit | undefined {
-  return habitStore.get(habitId);
-}
-
-/**
- * Actualiza name/description de un hábito.
- * - Lanza HttpError(404) si el hábito no existe.
- * - Lanza HttpError(403) si el hábito no pertenece al userId.
- */
-export function updateHabit(
+export async function updateHabit(
   habitId: string,
   userId: string,
-  data: { name?: string; description?: string },
-): Habit {
+  dto: UpdateHabitDTO,
+): Promise<Habit> {
   const habit = habitStore.get(habitId);
   if (!habit) {
     throw new HttpError('Hábito no encontrado', 404);
@@ -65,24 +72,28 @@ export function updateHabit(
   if (habit.userId !== userId) {
     throw new HttpError('No autorizado', 403);
   }
-
-  if (data.name !== undefined) {
-    habit.name = data.name;
+  if (dto.name !== undefined) {
+    habit.name = dto.name;
   }
-  if (data.description !== undefined) {
-    habit.description = data.description;
+  if (dto.description !== undefined) {
+    habit.description = dto.description;
   }
-
-  habitStore.set(habitId, habit);
-  return habit;
+  return {
+    id: habit.id,
+    userId: habit.userId,
+    name: habit.name,
+    description: habit.description,
+    createdAt: habit.createdAt,
+  };
 }
 
 /**
- * Elimina un hábito existente.
- * - Lanza HttpError(404) si no existe.
- * - Lanza HttpError(403) si no pertenece al userId.
+ * Elimina un hábito.
  */
-export function deleteHabit(habitId: string, userId: string): void {
+export async function deleteHabit(
+  habitId: string,
+  userId: string,
+): Promise<void> {
   const habit = habitStore.get(habitId);
   if (!habit) {
     throw new HttpError('Hábito no encontrado', 404);
@@ -94,15 +105,13 @@ export function deleteHabit(habitId: string, userId: string): void {
 }
 
 /**
- * Marca un hábito como realizado hoy y calcula la racha actual.
- * @throws HttpError(404) si el hábito no existe.
- * @throws HttpError(403) si el hábito no pertenece al userId.
- * @throws HttpError(400) si ya está marcado hoy.
+ * Marca un hábito para el día de hoy y calcula la racha.
+ * Lanza HttpError(400) si ya estaba marcado hoy.
  */
-export function markHabit(
-  userId: string,
+export async function checkHabit(
   habitId: string,
-): { habitId: string; date: string; currentStreak: number } {
+  userId: string,
+): Promise<{ habitId: string; date: string; currentStreak: number }> {
   const habit = habitStore.get(habitId);
   if (!habit) {
     throw new HttpError('Hábito no encontrado', 404);
@@ -111,37 +120,26 @@ export function markHabit(
     throw new HttpError('No autorizado', 403);
   }
 
-  const today = new Date().toISOString().slice(0, 10);
-  const key = `${userId}:${habitId}`;
-  const dates = checkStore.get(key) ?? new Set<string>();
+  const today = new Date().toISOString().split('T')[0];
+  const lastCheck = habit.checks[habit.checks.length - 1];
 
-  if (dates.has(today)) {
+  if (lastCheck === today) {
+    // ¡Ya marcado hoy!
     throw new HttpError('Ya has marcado este hábito hoy', 400);
   }
 
-  dates.add(today);
-  checkStore.set(key, dates);
-
-  let streak = 1;
-  const cursor = new Date();
-  cursor.setDate(cursor.getDate() - 1);
-  while (dates.has(cursor.toISOString().slice(0, 10))) {
-    streak++;
-    cursor.setDate(cursor.getDate() - 1);
-  }
-
-  return { habitId, date: today, currentStreak: streak };
+  habit.checks.push(today);
+  const currentStreak = calculateStreak(habit.checks);
+  return { habitId, date: today, currentStreak };
 }
 
 /**
- * Consulta la racha actual de un hábito.
- * @throws HttpError(404) si el hábito no existe.
- * @throws HttpError(403) si el hábito no pertenece al userId.
+ * Obtiene la racha actual de un hábito sin marcarlo de nuevo.
  */
-export function getHabitStreak(
-  userId: string,
+export async function getHabitStreak(
   habitId: string,
-): { habitId: string; currentStreak: number; lastCheck?: string } {
+  userId: string,
+): Promise<{ habitId: string; currentStreak: number; lastCheck?: string }> {
   const habit = habitStore.get(habitId);
   if (!habit) {
     throw new HttpError('Hábito no encontrado', 404);
@@ -149,25 +147,30 @@ export function getHabitStreak(
   if (habit.userId !== userId) {
     throw new HttpError('No autorizado', 403);
   }
-
-  const key = `${userId}:${habitId}`;
-  const dates = checkStore.get(key) ?? new Set<string>();
-
-  if (dates.size === 0) {
-    return { habitId, currentStreak: 0 };
-  }
-
-  // Encontrar la última fecha marcada
-  const sortedDates = Array.from(dates).sort((a, b) => (a < b ? 1 : -1));
-  const lastCheck = sortedDates[0];
-
-  // Calcular racha desde hoy hacia atrás
-  let streak = 0;
-  const cursor = new Date();
-  while (dates.has(cursor.toISOString().slice(0, 10))) {
-    streak++;
-    cursor.setDate(cursor.getDate() - 1);
-  }
-
-  return { habitId, currentStreak: streak, lastCheck };
+  const checks = habit.checks;
+  const currentStreak = checks.length > 0 ? calculateStreak(checks) : 0;
+  const lastCheck = checks.length > 0 ? checks[checks.length - 1] : undefined;
+  return { habitId, currentStreak, lastCheck };
 }
+
+/**
+ * Helper: dadas fechas ISO (YYYY-MM-DD) ordenadas, cuenta cuántos días consecutivos hacia atrás.
+ */
+function calculateStreak(dates: string[]): number {
+  if (dates.length === 0) return 0;
+  let streak = 1;
+  for (let i = dates.length - 2; i >= 0; i--) {
+    const curr = new Date(dates[i + 1]);
+    const prev = new Date(dates[i]);
+    const diffDays = (curr.getTime() - prev.getTime()) / (1000 * 60 * 60 * 24);
+    if (diffDays === 1) {
+      streak++;
+    } else {
+      break;
+    }
+  }
+  return streak;
+}
+
+// Re-exportamos HttpError para que lo puedan importar los controladores
+export { HttpError };

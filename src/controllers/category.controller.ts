@@ -1,4 +1,4 @@
-import { RequestHandler } from 'express';
+import { Request, Response } from 'express';
 import { plainToInstance } from 'class-transformer';
 import { validateOrReject } from 'class-validator';
 import { CategoryDTO } from '../models/Category';
@@ -11,7 +11,13 @@ import {
 } from '../services/category.service';
 import { HttpError } from '../services/user.service';
 
-export const createCategoryHandler: RequestHandler = async (req, res) => {
+/**
+ * POST /api/categories
+ */
+export const createCategoryHandler = async (
+  req: Request,
+  res: Response,
+): Promise<void> => {
   try {
     const dto = plainToInstance(CategoryDTO, req.body);
     await validateOrReject(dto);
@@ -35,16 +41,22 @@ export const createCategoryHandler: RequestHandler = async (req, res) => {
       res.status(500).json({ message: err.message });
       return;
     }
-    res.status(500).json({ message: 'Error interno' });
+    res.status(500).json({ message: 'Error interno del servidor' });
   }
 };
 
-export const getCategoriesHandler: RequestHandler = (_req, res) => {
+/**
+ * GET /api/categories
+ */
+export const getCategoriesHandler = (_req: Request, res: Response): void => {
   const list = getCategories();
   res.json(list);
 };
 
-export const getCategoryByIdHandler: RequestHandler = (req, res) => {
+/**
+ * GET /api/categories/:id
+ */
+export const getCategoryByIdHandler = (req: Request, res: Response): void => {
   try {
     const cat = getCategoryById(req.params.id);
     res.json(cat);
@@ -57,11 +69,17 @@ export const getCategoryByIdHandler: RequestHandler = (req, res) => {
       res.status(500).json({ message: err.message });
       return;
     }
-    res.status(500).json({ message: 'Error interno' });
+    res.status(500).json({ message: 'Error interno del servidor' });
   }
 };
 
-export const updateCategoryHandler: RequestHandler = async (req, res) => {
+/**
+ * PUT /api/categories/:id
+ */
+export const updateCategoryHandler = async (
+  req: Request,
+  res: Response,
+): Promise<void> => {
   try {
     const dto = plainToInstance(CategoryDTO, req.body);
     await validateOrReject(dto);
@@ -85,11 +103,14 @@ export const updateCategoryHandler: RequestHandler = async (req, res) => {
       res.status(500).json({ message: err.message });
       return;
     }
-    res.status(500).json({ message: 'Error interno' });
+    res.status(500).json({ message: 'Error interno del servidor' });
   }
 };
 
-export const deleteCategoryHandler: RequestHandler = (req, res) => {
+/**
+ * DELETE /api/categories/:id
+ */
+export const deleteCategoryHandler = (req: Request, res: Response): void => {
   try {
     deleteCategory(req.params.id);
     res.sendStatus(204);
@@ -102,6 +123,6 @@ export const deleteCategoryHandler: RequestHandler = (req, res) => {
       res.status(500).json({ message: err.message });
       return;
     }
-    res.status(500).json({ message: 'Error interno' });
+    res.status(500).json({ message: 'Error interno del servidor' });
   }
 };

@@ -1,32 +1,27 @@
 import request from 'supertest';
 import app from '../../src/index';
-import { createUser } from '../../src/services/user.service';
 import { createHabit, habitStore } from '../../src/services/habit.service';
-import jwt from 'jsonwebtoken';
+import { createUser } from '../../src/services/user.service';
 
 describe('C05: POST /api/habits/:habitId/check', () => {
-  let authToken: string;
   let userId: string;
+  let authToken: string;
   let habitId: string;
 
   beforeAll(async () => {
-    // 1. Crear usuario y token
-    const user = await createUser('checkuser@test.com', 'secret123');
+    // Creamos usuario y obtenemos token
+    const email = 'check@test.com';
+    const password = 'secret123';
+    const user = await createUser(email, password);
     userId = user.id;
-    authToken = jwt.sign(
-      { sub: userId, email: 'checkuser@test.com' },
-      process.env.JWT_SECRET!,
-      { expiresIn: '1h' },
-    );
+    const loginRes = await request(app)
+      .post('/api/auth/login')
+      .send({ email, password });
+    authToken = loginRes.body.accessToken;
   });
 
   beforeEach(() => {
-    // Crear el hábito de prueba antes de cada test
-    const habit = createHabit(userId, 'hacer ejercicio', 'Descripción');
-    habitId = habit.id;
-  });
-
-  afterEach(() => {
+    // Limpiamos el store antes de cada test
     habitStore.clear();
   });
 
@@ -37,21 +32,23 @@ describe('C05: POST /api/habits/:habitId/check', () => {
   });
 
   it('debe devolver 404 si el hábito no existe', async () => {
-    habitStore.clear();
     const res = await request(app)
-      .post(`/api/habits/no-existe-uuid/check`)
+      .post(`/api/habits/${habitId}/check`)
       .set('Authorization', `Bearer ${authToken}`);
     expect(res.status).toBe(404);
     expect(res.body.message).toBe('Hábito no encontrado');
   });
 
   it('debe devolver 400 si ya se marcó hoy', async () => {
-    // Primera marca OK
+    // Creamos un hábito y lo marcamos una vez
+    const habit = await createHabit(userId, { name: 'hacer ejercicio' });
+    habitId = habit.id;
+
     await request(app)
       .post(`/api/habits/${habitId}/check`)
       .set('Authorization', `Bearer ${authToken}`);
 
-    // Segundo intento, debe fallar
+    // Intentamos marcarlo de nuevo el mismo día
     const res2 = await request(app)
       .post(`/api/habits/${habitId}/check`)
       .set('Authorization', `Bearer ${authToken}`);
@@ -60,10 +57,13 @@ describe('C05: POST /api/habits/:habitId/check', () => {
   });
 
   it('debe devolver 200 con date y currentStreak correcto', async () => {
+    // Creamos y marcamos
+    const habit = await createHabit(userId, { name: 'hacer ejercicio' });
+    habitId = habit.id;
+
     const res = await request(app)
       .post(`/api/habits/${habitId}/check`)
       .set('Authorization', `Bearer ${authToken}`);
-
     expect(res.status).toBe(200);
     expect(res.body).toHaveProperty('habitId', habitId);
     expect(res.body).toHaveProperty('date');
