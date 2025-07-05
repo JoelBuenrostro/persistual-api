@@ -9,6 +9,7 @@ import YAML from 'yamljs';
 import authRoutes from './routes/auth.routes';
 import habitRoutes from './routes/habit.routes';
 import categoryRoutes from './routes/category.routes';
+import metricsRoutes from './routes/metrics.routes';
 import { HttpError } from './services/user.service';
 
 const app = express();
@@ -30,6 +31,7 @@ app.get('/healthz', (_req, res) => {
 app.use('/api', authRoutes);
 app.use('/api', habitRoutes);
 app.use('/api', categoryRoutes);
+app.use('/api', metricsRoutes);
 
 // Manejador global de errores
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
