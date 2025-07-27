@@ -9,8 +9,9 @@ import {
   deleteHabit,
   checkHabit,
   getHabitStreak,
+  HttpError,
 } from '../services/habit.service';
-import { HttpError } from '../services/user.service';
+
 import { AuthRequest } from '../middlewares/auth.middleware';
 
 /**
