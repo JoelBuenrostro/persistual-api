@@ -77,6 +77,53 @@ paths:
         '401':
           $ref: '#/components/responses/Unauthorized'
 
+  /api/auth/forgot:
+    post:
+      summary: Solicita un token para resetear contraseña
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  format: email
+      responses:
+        '200':
+          description: Token enviado (simulado)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+
+  /api/auth/reset:
+    post:
+      summary: Resetea la contraseña usando un token
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                token:
+                  type: string
+                newPassword:
+                  type: string
+                  minLength: 6
+      responses:
+        '200':
+          description: Contraseña actualizada
+        '400':
+          description: Token inválido o contraseña inválida
+        '404':
+          description: Usuario no encontrado
+
   /api/habits:
     get:
       summary: Lista hábitos del usuario autenticado

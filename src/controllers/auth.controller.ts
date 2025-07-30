@@ -4,7 +4,12 @@ import { validateOrReject } from 'class-validator';
 import { UserDTO } from '../models/User';
 import { LoginDTO } from '../models/Auth';
 import { createUser, HttpError } from '../services/user.service';
-import { authenticateUser, refreshAccessToken } from '../services/auth.service';
+import {
+  authenticateUser,
+  refreshAccessToken,
+  resetPassword,
+} from '../services/auth.service';
+/* import logger from '../utils/logger'; */
 
 /**
  * Maneja el registro de usuarios (POST /api/auth/register)
@@ -41,7 +46,8 @@ export async function registerHandler(
       return;
     }
     // Fallback
-    res.status(500).json({ message: 'Error interno del servidor' });
+    const _err = new Error('Error interno del servidor');
+    res.status(500).json({ message: _err.message });
   }
 }
 
@@ -77,7 +83,8 @@ export async function loginHandler(req: Request, res: Response): Promise<void> {
       return;
     }
     // Fallback
-    res.status(500).json({ message: 'Error interno del servidor' });
+    const _err = new Error('Error interno del servidor'); // Renombrar 'err' a '_err'
+    res.status(500).json({ message: _err.message });
   }
 }
 
@@ -112,6 +119,58 @@ export async function refreshHandler(
       return;
     }
     // Fallback
+    const _err = new Error('Error interno del servidor'); // Renombrar 'err' a '_err'
+    res.status(500).json({ message: _err.message });
+  }
+}
+
+/**
+ * POST /api/auth/forgot
+ */
+export async function forgotPasswordHandler(
+  req: Request,
+  res: Response,
+): Promise<void> {
+  try {
+    const { email } = req.body;
+    // TODO: Implement forgotPassword functionality or import it if available
+    res.status(501).json({
+      message: 'Funcionalidad no implementada: forgotPassword',
+    });
+  } catch (err: unknown) {
     res.status(500).json({ message: 'Error interno del servidor' });
+  }
+}
+
+/**
+ * POST /api/auth/reset
+ */
+export async function resetPasswordHandler(
+  req: Request,
+  res: Response,
+): Promise<void> {
+  try {
+    const { token, newPassword } = req.body;
+    if (!newPassword || newPassword.length < 6) {
+      res
+        .status(400)
+        .json({ message: 'La contraseña debe tener al menos 6 caracteres' });
+      return;
+    }
+
+    await resetPassword(token, newPassword);
+    // TODO: Implement resetPassword functionality or import it if available
+    res
+      .status(501)
+      .json({ message: 'Funcionalidad no implementada: resetPassword' });
+    // res.status(200).json({ message: 'Contraseña actualizada correctamente' });
+  } catch (err: unknown) {
+    if (err instanceof HttpError) {
+      res.status(err.status).json({ message: err.message });
+    } else if (err instanceof Error) {
+      res.status(500).json({ message: err.message });
+    } else {
+      res.status(500).json({ message: 'Error interno del servidor' });
+    }
   }
 }
