@@ -9,6 +9,15 @@ import { HttpError, userStore } from './user.service';
 const refreshTokenStore = new Map<string, string>();
 
 /**
+ * Almacén en memoria para tokens de recuperación de contraseña
+ * Clave: token, Valor: { userId, expiresAt }
+ */
+export const resetTokenStore = new Map<
+  string,
+  { userId: string; expiresAt: number }
+>();
+
+/**
  * Autentica un usuario y genera access & refresh tokens.
  *
  * @param email    Email del usuario
@@ -120,4 +129,59 @@ export function refreshAccessToken(token: string): { accessToken: string } {
     // Mensaje en español para coincidir con la preferencia
     throw new HttpError('Token inválido o expirado', 401);
   }
+}
+
+/**
+ * Genera un token de recuperación de contraseña y lo almacena.
+ * @param email Email del usuario
+ */
+export async function forgotPassword(email: string): Promise<void> {
+  const user = userStore.get(email);
+  if (!user) {
+    // No exponemos si el email no existe
+    return;
+  }
+
+  const resetToken = jwt.sign(
+    { sub: user.id },
+    process.env.JWT_SECRET!,
+    { expiresIn: '15m' }, // Token válido por 15 minutos
+  );
+
+  resetTokenStore.set(resetToken, {
+    userId: user.id,
+    expiresAt: Date.now() + 15 * 60 * 1000, // 15 minutos
+  });
+
+  // Simula el envío del email (por consola)
+  console.log(`Token de recuperación para ${email}: ${resetToken}`);
+}
+
+/**
+ * Resetea la contraseña de un usuario dado un token válido.
+ * @param token Token de recuperación
+ * @param newPassword Nueva contraseña
+ */
+export async function resetPassword(
+  token: string,
+  newPassword: string,
+): Promise<void> {
+  const payload = jwt.verify(token, process.env.JWT_SECRET!) as jwt.JwtPayload;
+  const stored = resetTokenStore.get(token);
+
+  if (
+    !stored ||
+    stored.userId !== payload.sub ||
+    stored.expiresAt < Date.now()
+  ) {
+    throw new HttpError('Token inválido o expirado', 400);
+  }
+
+  const user = Array.from(userStore.values()).find(u => u.id === stored.userId);
+  if (!user) {
+    throw new HttpError('Usuario no encontrado', 404);
+  }
+
+  user.passwordHash = await bcrypt.hash(newPassword, 10);
+  resetTokenStore.delete(token);
 }
