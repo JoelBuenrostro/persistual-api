@@ -11,6 +11,7 @@ import userRoutes from './routes/user.routes';
 import habitRoutes from './routes/habit.routes';
 import categoryRoutes from './routes/category.routes';
 import metricsRoutes from './routes/metrics.routes';
+import notificationRoutes from './routes/notification.routes';
 import { HttpError } from './services/user.service';
 
 const app = express();
@@ -34,6 +35,7 @@ app.use('/api', userRoutes);
 app.use('/api', habitRoutes);
 app.use('/api', categoryRoutes);
 app.use('/api', metricsRoutes);
+app.use('/api', notificationRoutes);
 
 // Manejador global de errores
 const errorHandler: ErrorRequestHandler = (err, _req, res, _next) => {
