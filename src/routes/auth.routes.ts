@@ -5,12 +5,18 @@ import {
   refreshHandler,
   forgotPasswordHandler,
   resetPasswordHandler,
+  googleAuthUrl,
+  googleCallback,
 } from '../controllers/auth.controller';
 
 const router = Router();
 
 // Registro de nuevos usuarios
 router.post('/auth/register', registerHandler);
+
+// Google OAuth endpoints
+router.get('/auth/google/url', googleAuthUrl);
+router.get('/auth/google/callback', googleCallback);
 
 // Login: genera access & refresh tokens
 router.post('/auth/login', loginHandler);

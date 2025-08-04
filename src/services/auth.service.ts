@@ -1,3 +1,29 @@
+import querystring from 'querystring';
+// Almacén en memoria para tokens de Google
+export const googleTokenStore = new Map<
+  string,
+  { accessToken: string; refreshToken: string }
+>();
+/**
+ * Devuelve la URL de autorización de Google OAuth
+ */
+export function getGoogleAuthUrl(): string {
+  const clientId = process.env.GOOGLE_CLIENT_ID;
+  const redirectUri = process.env.GOOGLE_REDIRECT_URI;
+  const scope = [
+    'https://www.googleapis.com/auth/calendar.events',
+    'https://www.googleapis.com/auth/userinfo.email',
+  ].join(' ');
+  const params = querystring.stringify({
+    client_id: clientId,
+    redirect_uri: redirectUri,
+    response_type: 'code',
+    access_type: 'offline',
+    prompt: 'consent',
+    scope,
+  });
+  return `https://accounts.google.com/o/oauth2/v2/auth?${params}`;
+}
 import bcrypt from 'bcryptjs';
 import jwt, { SignOptions } from 'jsonwebtoken';
 import { HttpError, userStore } from './user.service';
@@ -153,8 +179,8 @@ export async function forgotPassword(email: string): Promise<void> {
     expiresAt: Date.now() + 15 * 60 * 1000, // 15 minutos
   });
 
-  // Simula el envío del email (por consola)
-  console.log(`Token de recuperación para ${email}: ${resetToken}`);
+  // Aquí se podría enviar el email usando un servicio externo
+  // Ejemplo: enviarEmail(email, resetToken);
 }
 
 /**
