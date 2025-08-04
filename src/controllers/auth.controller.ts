@@ -1,4 +1,63 @@
+import axios from 'axios';
+import { googleTokenStore } from '../services/auth.service';
+/**
+ * GET /api/auth/google/callback?code=...
+ * Intercambia el code por tokens y los guarda en memoria
+ */
+export async function googleCallback(
+  req: Request,
+  res: Response,
+): Promise<void> {
+  const code = req.query.code as string;
+  if (!code) {
+    res.status(400).json({ error: 'Missing code parameter' });
+    return;
+  }
+  try {
+    const clientId = process.env.GOOGLE_CLIENT_ID;
+    const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
+    const redirectUri = process.env.GOOGLE_REDIRECT_URI;
+    const tokenUrl = 'https://oauth2.googleapis.com/token';
+    const params = {
+      code,
+      client_id: clientId,
+      client_secret: clientSecret,
+      redirect_uri: redirectUri,
+      grant_type: 'authorization_code',
+    };
+    const response = await axios.post(tokenUrl, params, {
+      headers: { 'Content-Type': 'application/json' },
+    });
+    const { access_token, refresh_token, id_token } = response.data;
+    // Guardar tokens en memoria (por ejemplo, usando el email extraído del id_token)
+    // Aquí solo guardamos por id_token para simplificar
+    googleTokenStore.set(id_token, {
+      accessToken: access_token,
+      refreshToken: refresh_token,
+    });
+    res.json({ access_token, refresh_token, id_token });
+  } catch (err: unknown) {
+    res.status(502).json({
+      error: 'Google integration error',
+      details: err instanceof Error ? err.message : String(err),
+    });
+  }
+}
+
 import { Request, Response } from 'express';
+import { getGoogleAuthUrl } from '../services/auth.service';
+/**
+ * GET /api/auth/google/url
+ * Devuelve la URL de autorización de Google OAuth
+ */
+export function googleAuthUrl(req: Request, res: Response): void {
+  try {
+    const url = getGoogleAuthUrl();
+    res.json({ url });
+  } catch (_err) {
+    res.status(500).json({ error: 'Error generating Google Auth URL' });
+  }
+}
 import { plainToInstance } from 'class-transformer';
 import { validateOrReject } from 'class-validator';
 import { UserDTO } from '../models/User';
@@ -9,7 +68,6 @@ import {
   refreshAccessToken,
   resetPassword,
 } from '../services/auth.service';
-/* import logger from '../utils/logger'; */
 
 /**
  * Maneja el registro de usuarios (POST /api/auth/register)
@@ -132,12 +190,12 @@ export async function forgotPasswordHandler(
   res: Response,
 ): Promise<void> {
   try {
-    const { email } = req.body;
+    const { email: _email } = req.body;
     // TODO: Implement forgotPassword functionality or import it if available
     res.status(501).json({
       message: 'Funcionalidad no implementada: forgotPassword',
     });
-  } catch (err: unknown) {
+  } catch (_err: unknown) {
     res.status(500).json({ message: 'Error interno del servidor' });
   }
 }

@@ -32,14 +32,23 @@ export function scheduleReminder(
 
   const id = uuid();
   const delay = target.getTime() - Date.now();
-  const timeout = setTimeout(() => {
-    const h = habitStore.get(habitId);
-    // eslint-disable-next-line no-console
-    console.log(`Hoy toca marcar ${h ? h.name : habitId}`);
-    notificationStore.delete(id);
-  }, Math.max(delay, 0));
+  const timeout = setTimeout(
+    () => {
+      const h = habitStore.get(habitId);
+      // eslint-disable-next-line no-console
+      console.log(`Hoy toca marcar ${h ? h.name : habitId}`);
+      notificationStore.delete(id);
+    },
+    Math.max(delay, 0),
+  );
 
-  notificationStore.set(id, { id, userId, habitId, date: target.toISOString(), timeout });
+  notificationStore.set(id, {
+    id,
+    userId,
+    habitId,
+    date: target.toISOString(),
+    timeout,
+  });
   return { id, habitId, date: target.toISOString() };
 }
 

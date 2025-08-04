@@ -3,7 +3,10 @@ import { plainToInstance } from 'class-transformer';
 import { validateOrReject } from 'class-validator';
 import { AuthRequest } from '../middlewares/auth.middleware';
 import { NotificationDTO } from '../models/NotificationDTO';
-import { scheduleReminder, deleteReminder } from '../services/notification.service';
+import {
+  scheduleReminder,
+  deleteReminder,
+} from '../services/notification.service';
 import { HttpError } from '../services/user.service';
 
 export async function createNotificationHandler(
@@ -27,7 +30,8 @@ export async function createNotificationHandler(
       res.status(err.status).json({ message: err.message });
     } else {
       res.status(500).json({
-        message: err instanceof Error ? err.message : 'Error interno del servidor',
+        message:
+          err instanceof Error ? err.message : 'Error interno del servidor',
       });
     }
   }

@@ -1,3 +1,5 @@
+import { googleTokenStore } from './auth.service';
+import axios from 'axios';
 import { v4 as uuid } from 'uuid';
 import { Habit } from '../models/Habits';
 import { CreateHabitDTO, UpdateHabitDTO } from '../models/HabitDTO';
@@ -104,6 +106,33 @@ export async function checkHabit(
 
   dates.push(today);
   const { currentStreak } = await getHabitStreak(habitId, userId);
+
+  // Crear evento en Google Calendar si hay token
+  try {
+    // Buscar el primer token en memoria (en producción usar el del usuario)
+    const tokenEntry = Array.from(googleTokenStore.values())[0];
+    if (tokenEntry?.accessToken) {
+      await axios.post(
+        'https://www.googleapis.com/calendar/v3/calendars/primary/events',
+        {
+          summary: `Check de hábito: ${habit.name}`,
+          description: habit.description,
+          start: { date: today },
+          end: { date: today },
+        },
+        {
+          headers: { Authorization: `Bearer ${tokenEntry.accessToken}` },
+        },
+      );
+    }
+  } catch (err: unknown) {
+    let message = 'Google Calendar integration error';
+    if (err instanceof Error) {
+      message += ': ' + err.message;
+    }
+    throw new HttpError(message, 502);
+  }
+
   return { habitId, date: today, currentStreak };
 }
 

@@ -16,6 +16,11 @@ const deleteNotificationLimiter = rateLimit({
 const router = Router();
 
 router.post('/notifications', authMiddleware, createNotificationHandler);
-router.delete('/notifications/:id', authMiddleware, deleteNotificationLimiter, deleteNotificationHandler);
+router.delete(
+  '/notifications/:id',
+  authMiddleware,
+  deleteNotificationLimiter,
+  deleteNotificationHandler,
+);
 
 export default router;
