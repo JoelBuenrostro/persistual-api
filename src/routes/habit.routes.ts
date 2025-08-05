@@ -6,6 +6,7 @@ import {
   deleteHabitHandler,
   checkHabitHandler,
   getHabitStreakHandler,
+  exportHabitsHandler,
 } from '../controllers/habit.controller';
 import { authMiddleware } from '../middlewares/auth.middleware';
 
@@ -28,5 +29,8 @@ router.post('/habits/:habitId/check', authMiddleware, checkHabitHandler);
 
 // C06: Obtener racha de un hábito
 router.get('/habits/:habitId/streak', authMiddleware, getHabitStreakHandler);
+
+// Exportar hábitos y checks en CSV o Excel
+router.get('/habits/export', authMiddleware, exportHabitsHandler);
 
 export default router;

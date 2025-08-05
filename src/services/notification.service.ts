@@ -34,9 +34,7 @@ export function scheduleReminder(
   const delay = target.getTime() - Date.now();
   const timeout = setTimeout(
     () => {
-      const h = habitStore.get(habitId);
-      // eslint-disable-next-line no-console
-      console.log(`Hoy toca marcar ${h ? h.name : habitId}`);
+      habitStore.get(habitId);
       notificationStore.delete(id);
     },
     Math.max(delay, 0),
