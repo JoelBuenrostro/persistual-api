@@ -37,7 +37,6 @@ describe('Notification Service', () => {
     );
     expect(notificationStore.has(id)).toBe(true);
     jest.advanceTimersByTime(1000);
-    // Se omite la verificación de llamadas a console.log para cumplir con no-console
     expect(notificationStore.has(id)).toBe(false);
   });
 
@@ -50,6 +49,5 @@ describe('Notification Service', () => {
     deleteReminder(id, userId);
     expect(notificationStore.has(id)).toBe(false);
     jest.advanceTimersByTime(1000);
-    // Se omite la verificación de llamadas a console.log para cumplir con no-console
   });
 });

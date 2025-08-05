@@ -18,20 +18,20 @@ Esta política aplica a:
 
 ## 3. Proceso de Reporte
 
-1. **Enviar reporte por email**  
+**Enviar reporte por email**  
    Envía un correo a con el asunto:
 
-2. **Información mínima a incluir**
+### Información mínima a incluir
 
 - Descripción del fallo y su impacto.
 - Pasos para reproducir, PoC o capturas de pantalla.
 - Entorno afectado (versión de Persistual, Node.js, SO).
 - Tu nivel de confianza en la vulnerabilidad.
 
-3. **No publiques detalles**  
+**No publiques detalles**  
    Para evitar que terceros los aprovechen, mantén la información reservada hasta que esté corregida.
 
-4. **Confirmación de recepción**  
+**Confirmación de recepción**  
    Recibirás respuesta en un plazo máximo de **48 horas** con un número de ticket y una estimación de tiempos.
 
 ---
