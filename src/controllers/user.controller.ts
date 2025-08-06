@@ -1,3 +1,32 @@
+import { UpdateUserRoleDTO } from '../models/User';
+import { updateUserRole } from '../services/user.service';
+/**
+ * PATCH /api/users/:id/role
+ * Cambia el rol de un usuario (solo admin)
+ */
+export async function updateUserRoleHandler(
+  req: AuthRequest,
+  res: Response,
+): Promise<void> {
+  try {
+    const { id } = req.params;
+    const dto = plainToInstance(UpdateUserRoleDTO, req.body);
+    await validateOrReject(dto);
+    const result = updateUserRole(id, dto.role);
+    res.status(200).json(result);
+  } catch (err: unknown) {
+    if (Array.isArray(err)) {
+      const errors = err.flatMap(e =>
+        e.constraints ? Object.values(e.constraints) : [],
+      );
+      res.status(400).json({ errors });
+    } else if (err instanceof HttpError) {
+      res.status(err.status).json({ message: err.message });
+    } else {
+      res.status(500).json({ message: 'Error interno del servidor' });
+    }
+  }
+}
 import { Response } from 'express';
 import { plainToInstance } from 'class-transformer';
 import { validateOrReject } from 'class-validator';

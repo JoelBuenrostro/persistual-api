@@ -1,3 +1,16 @@
+/**
+ * Cambia el rol de un usuario dado su ID.
+ * Solo para admin.
+ */
+export function updateUserRole(
+  id: string,
+  role: 'user' | 'admin',
+): { id: string; role: 'user' | 'admin' } {
+  const user = Array.from(userStore.values()).find(u => u.id === id);
+  if (!user) throw new HttpError('Usuario no encontrado', 404);
+  user.role = role;
+  return { id: user.id, role: user.role };
+}
 import bcrypt from 'bcryptjs';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -19,6 +32,7 @@ interface StoredUser {
   id: string;
   email: string;
   passwordHash: string;
+  role: 'user' | 'admin';
 }
 
 /**
@@ -34,14 +48,15 @@ export const userStore = new Map<string, StoredUser>();
 export async function createUser(
   email: string,
   password: string,
-): Promise<{ id: string; email: string }> {
+): Promise<{ id: string; email: string; role: 'user' | 'admin' }> {
   if (userStore.has(email)) {
     throw new HttpError('Email en uso', 400);
   }
   const passwordHash = await bcrypt.hash(password, 10);
   const id = uuidv4();
-  userStore.set(email, { id, email, passwordHash });
-  return { id, email };
+  const role: 'user' | 'admin' = 'user';
+  userStore.set(email, { id, email, passwordHash, role });
+  return { id, email, role };
 }
 
 /**
