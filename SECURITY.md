@@ -19,7 +19,7 @@ Esta política aplica a:
 ## 3. Proceso de Reporte
 
 **Enviar reporte por email**  
-   Envía un correo a con el asunto:
+ Envía un correo a con el asunto:
 
 ### Información mínima a incluir
 
@@ -29,10 +29,10 @@ Esta política aplica a:
 - Tu nivel de confianza en la vulnerabilidad.
 
 **No publiques detalles**  
-   Para evitar que terceros los aprovechen, mantén la información reservada hasta que esté corregida.
+ Para evitar que terceros los aprovechen, mantén la información reservada hasta que esté corregida.
 
 **Confirmación de recepción**  
-   Recibirás respuesta en un plazo máximo de **48 horas** con un número de ticket y una estimación de tiempos.
+ Recibirás respuesta en un plazo máximo de **48 horas** con un número de ticket y una estimación de tiempos.
 
 ---
 
