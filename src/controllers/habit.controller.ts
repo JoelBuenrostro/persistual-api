@@ -93,8 +93,7 @@ export async function createHabitHandler(
       res.status(err.status).json({ message: err.message });
     } else {
       res.status(500).json({
-        message:
-          err instanceof Error ? err.message : 'Error interno del servidor',
+        message: err instanceof Error ? err.message : req.t('error_internal'),
       });
     }
   }
@@ -115,7 +114,7 @@ export async function getHabitsHandler(
     if (err instanceof HttpError) {
       res.status(err.status).json({ message: err.message });
     } else {
-      res.status(500).json({ message: 'Error interno del servidor' });
+      res.status(500).json({ message: req.t('error_internal') });
     }
   }
 }
@@ -145,8 +144,7 @@ export async function updateHabitHandler(
       res.status(err.status).json({ message: err.message });
     } else {
       res.status(500).json({
-        message:
-          err instanceof Error ? err.message : 'Error interno del servidor',
+        message: err instanceof Error ? err.message : req.t('error_internal'),
       });
     }
   }
@@ -168,7 +166,7 @@ export async function deleteHabitHandler(
     if (err instanceof HttpError) {
       res.status(err.status).json({ message: err.message });
     } else {
-      res.status(500).json({ message: 'Error interno del servidor' });
+      res.status(500).json({ message: req.t('error_internal') });
     }
   }
 }
@@ -189,7 +187,7 @@ export async function checkHabitHandler(
     if (err instanceof HttpError) {
       res.status(err.status).json({ message: err.message });
     } else {
-      res.status(500).json({ message: 'Error interno del servidor' });
+      res.status(500).json({ message: req.t('error_internal') });
     }
   }
 }
@@ -210,7 +208,7 @@ export async function getHabitStreakHandler(
     if (err instanceof HttpError) {
       res.status(err.status).json({ message: err.message });
     } else {
-      res.status(500).json({ message: 'Error interno del servidor' });
+      res.status(500).json({ message: req.t('error_internal') });
     }
   }
 }

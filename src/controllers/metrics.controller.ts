@@ -16,7 +16,7 @@ export async function getMetricsHandler(
     if (err instanceof HttpError) {
       res.status(err.status).json({ message: err.message });
     } else {
-      res.status(500).json({ message: 'Error interno del servidor' });
+      res.status(500).json({ message: req.t('error_internal') });
     }
   }
 }

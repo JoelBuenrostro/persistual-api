@@ -1,3 +1,6 @@
+import i18next from 'i18next';
+import i18nextMiddleware from 'i18next-http-middleware';
+import Backend from 'i18next-fs-backend';
 import 'reflect-metadata';
 import dotenv from 'dotenv';
 dotenv.config();
@@ -15,6 +18,32 @@ import notificationRoutes from './routes/notification.routes';
 import { HttpError } from './services/user.service';
 
 const app = express();
+
+// Configuración i18next
+i18next
+  .use(Backend)
+  .use(i18nextMiddleware.LanguageDetector)
+  .init({
+    fallbackLng: 'es',
+    preload: ['es', 'en'],
+    backend: {
+      loadPath: __dirname + '/../locales/{{lng}}/translation.json',
+    },
+  });
+app.use(i18nextMiddleware.handle(i18next));
+
+// Configuración i18next
+i18next
+  .use(Backend)
+  .use(i18nextMiddleware.LanguageDetector)
+  .init({
+    fallbackLng: 'es',
+    preload: ['es', 'en'],
+    backend: {
+      loadPath: __dirname + '/../locales/{{lng}}/translation.json',
+    },
+  });
+app.use(i18nextMiddleware.handle(i18next));
 
 // Middlewares de parsing
 app.use(express.json());

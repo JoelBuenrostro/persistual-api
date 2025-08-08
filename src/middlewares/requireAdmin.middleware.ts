@@ -8,7 +8,7 @@ export function requireAdmin(
   next: NextFunction,
 ): void {
   if (req.user?.role !== 'admin') {
-    throw new HttpError('Solo administradores', 403);
+    throw new HttpError('error_forbidden', 403);
   }
   next();
 }

@@ -1,9 +1,3 @@
-import { IsIn } from 'class-validator';
-// DTO para cambio de rol
-export class UpdateUserRoleDTO {
-  @IsIn(['user', 'admin'], { message: 'El rol debe ser user o admin' })
-  role!: 'user' | 'admin';
-}
 import { IsEmail, MinLength } from 'class-validator';
 
 /**
