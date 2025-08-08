@@ -1,0 +1,10 @@
+{
+  "error_invalid_token": "Invalid or expired token",
+  "error_internal": "Internal server error",
+  "error_email_in_use": "Email already in use",
+  "error_not_found": "Not found",
+  "error_forbidden": "Forbidden",
+  "validation_email": "Email is not valid",
+  "validation_password": "Password must be at least 6 characters",
+  "validation_name": "Name must be at least 3 characters"
+}

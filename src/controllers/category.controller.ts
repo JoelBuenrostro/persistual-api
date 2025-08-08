@@ -41,7 +41,7 @@ export const createCategoryHandler = async (
       res.status(500).json({ message: err.message });
       return;
     }
-    res.status(500).json({ message: 'Error interno del servidor' });
+    res.status(500).json({ message: req.t('error_internal') });
   }
 };
 
@@ -69,7 +69,7 @@ export const getCategoryByIdHandler = (req: Request, res: Response): void => {
       res.status(500).json({ message: err.message });
       return;
     }
-    res.status(500).json({ message: 'Error interno del servidor' });
+    res.status(500).json({ message: req.t('error_internal') });
   }
 };
 
@@ -103,7 +103,7 @@ export const updateCategoryHandler = async (
       res.status(500).json({ message: err.message });
       return;
     }
-    res.status(500).json({ message: 'Error interno del servidor' });
+    res.status(500).json({ message: req.t('error_internal') });
   }
 };
 
@@ -123,6 +123,6 @@ export const deleteCategoryHandler = (req: Request, res: Response): void => {
       res.status(500).json({ message: err.message });
       return;
     }
-    res.status(500).json({ message: 'Error interno del servidor' });
+    res.status(500).json({ message: req.t('error_internal') });
   }
 };

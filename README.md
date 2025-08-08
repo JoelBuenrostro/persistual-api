@@ -56,13 +56,13 @@ Authorization: Bearer <accessToken>
 
 Registra un nuevo usuario.
 
-**Request Body**
+#### Request Body
 
 ```json
 { "email": "user@example.com", "password": "secret123" }
 ```
 
-**Responses**
+#### Responses (Registro)
 
 - **201 Created**
 
@@ -77,6 +77,7 @@ Registra un nuevo usuario.
   ```
 
 - **400 Bad Request** (email duplicado)
+
   ```json
   { "message": "Email en uso" }
   ```
@@ -87,13 +88,13 @@ Registra un nuevo usuario.
 
 Obtiene tokens JWT.
 
-**Request Body**
+#### Request Body
 
 ```json
 { "email": "user@example.com", "password": "secret123" }
 ```
 
-**Responses**
+#### Responses (Login)
 
 - **200 OK**
 
@@ -108,6 +109,7 @@ Obtiene tokens JWT.
   ```
 
 - **401 Unauthorized** (credenciales)
+
   ```json
   { "message": "Email o contraseña inválida" }
   ```
@@ -118,13 +120,13 @@ Obtiene tokens JWT.
 
 Renueva el access token usando el refresh token.
 
-**Request Body**
+#### Request Body
 
 ```json
 { "refreshToken": "<refresh_jwt>" }
 ```
 
-**Responses**
+#### Responses (Refresh)
 
 - **200 OK**
 
@@ -139,6 +141,7 @@ Renueva el access token usando el refresh token.
   ```
 
 - **401 Unauthorized** (inválido/expirado)
+
   ```json
   { "message": "Token inválido o expirado" }
   ```
@@ -151,13 +154,11 @@ Renueva el access token usando el refresh token.
 
 Crea un nuevo hábito.
 
-**Request Body**
-
 ```json
 { "name": "leer diario", "description": "30 min al día" }
 ```
 
-**Responses**
+#### Responses (Crear hábito)
 
 - **201 Created**
 
@@ -172,6 +173,7 @@ Crea un nuevo hábito.
   ```
 
 - **400 Bad Request** (validación)
+
   ```json
   { "errors": ["El nombre debe tener al menos 3 caracteres"] }
   ```
@@ -182,9 +184,10 @@ Crea un nuevo hábito.
 
 Lista todos los hábitos del usuario.
 
-**Responses**
+#### Responses (Listar hábitos)
 
 - **200 OK**
+
   ```json
   [ { "id": "...", "userId": "...", "name": "...", … }, … ]
   ```
@@ -195,13 +198,13 @@ Lista todos los hábitos del usuario.
 
 Actualiza nombre y/o descripción.
 
-**Request Body**
+#### Request Body
 
 ```json
 { "name": "nuevo nombre", "description": "…" }
 ```
 
-**Responses**
+#### Responses (Actualizar hábito)
 
 - **200 OK** → objeto `Habit` actualizado.
 - **400 Bad Request** (validación)
@@ -214,7 +217,7 @@ Actualiza nombre y/o descripción.
 
 Elimina un hábito.
 
-**Responses**
+#### Responses (Eliminar hábito)
 
 - **204 No Content**
 - **403 Forbidden** (no es tu hábito)
@@ -226,7 +229,7 @@ Elimina un hábito.
 
 Marca el hábito como completado hoy y devuelve la racha.
 
-**Responses**
+#### Responses (Check hábito)
 
 - **200 OK**
 
@@ -241,14 +244,16 @@ Marca el hábito como completado hoy y devuelve la racha.
 
 ### GET `/api/habits/:habitId/streak`
 
-consulta la racha actual sin alterar datos.
+Consulta la racha actual sin alterar datos.
 
-**Responses**
+#### Responses (Racha hábito)
 
 - **200 OK** (sin checks)
+
   ```json
   { "habitId": "...", "currentStreak": 0 }
   ```
+
 - **200 OK** (con racha)
 
   ```json
@@ -275,4 +280,4 @@ consulta la racha actual sin alterar datos.
 ## License
 
 Este proyecto está bajo la Licencia MIT. Véase [LICENSE](LICENSE).  
-_Traducción no oficial: consulta la MIT original en https://opensource.org/licenses/MIT_
+_Traducción no oficial: consulta la MIT original en <https://opensource.org/licenses/MIT>_

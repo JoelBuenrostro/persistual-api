@@ -104,8 +104,7 @@ export async function registerHandler(
       return;
     }
     // Fallback
-    const _err = new Error('Error interno del servidor');
-    res.status(500).json({ message: _err.message });
+    res.status(500).json({ message: req.t('error_internal') });
   }
 }
 
@@ -141,8 +140,7 @@ export async function loginHandler(req: Request, res: Response): Promise<void> {
       return;
     }
     // Fallback
-    const _err = new Error('Error interno del servidor'); // Renombrar 'err' a '_err'
-    res.status(500).json({ message: _err.message });
+    res.status(500).json({ message: req.t('error_internal') });
   }
 }
 
@@ -177,8 +175,7 @@ export async function refreshHandler(
       return;
     }
     // Fallback
-    const _err = new Error('Error interno del servidor'); // Renombrar 'err' a '_err'
-    res.status(500).json({ message: _err.message });
+    res.status(500).json({ message: req.t('error_internal') });
   }
 }
 
@@ -196,7 +193,7 @@ export async function forgotPasswordHandler(
       message: 'Funcionalidad no implementada: forgotPassword',
     });
   } catch (_err: unknown) {
-    res.status(500).json({ message: 'Error interno del servidor' });
+    res.status(500).json({ message: req.t('error_internal') });
   }
 }
 
@@ -210,9 +207,7 @@ export async function resetPasswordHandler(
   try {
     const { token, newPassword } = req.body;
     if (!newPassword || newPassword.length < 6) {
-      res
-        .status(400)
-        .json({ message: 'La contraseña debe tener al menos 6 caracteres' });
+      res.status(400).json({ message: req.t('validation_password') });
       return;
     }
 
@@ -228,7 +223,7 @@ export async function resetPasswordHandler(
     } else if (err instanceof Error) {
       res.status(500).json({ message: err.message });
     } else {
-      res.status(500).json({ message: 'Error interno del servidor' });
+      res.status(500).json({ message: req.t('error_internal') });
     }
   }
 }
