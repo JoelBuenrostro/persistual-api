@@ -56,7 +56,7 @@ Authorization: Bearer <accessToken>
 
 Registra un nuevo usuario.
 
-#### Request Body
+#### Request Body (Registro)
 
 ```json
 { "email": "user@example.com", "password": "secret123" }
@@ -88,7 +88,7 @@ Registra un nuevo usuario.
 
 Obtiene tokens JWT.
 
-#### Request Body
+#### Request Body (Login)
 
 ```json
 { "email": "user@example.com", "password": "secret123" }
@@ -120,7 +120,7 @@ Obtiene tokens JWT.
 
 Renueva el access token usando el refresh token.
 
-#### Request Body
+#### Request Body (Refresh Token)
 
 ```json
 { "refreshToken": "<refresh_jwt>" }
