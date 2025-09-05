@@ -1,5 +1,23 @@
+// Core y terceros
+import { Request, Response } from 'express';
 import axios from 'axios';
-import { googleTokenStore } from '../services/auth.service';
+import { plainToInstance } from 'class-transformer';
+import { validateOrReject } from 'class-validator';
+
+// Servicios y utilidades
+import {
+  googleTokenStore,
+  getGoogleAuthUrl,
+  authenticateUser,
+  refreshAccessToken,
+  resetPassword,
+} from '../services/auth.service';
+import { createUser, HttpError } from '../services/user.service';
+
+// Modelos
+import { UserDTO } from '../models/User';
+import { LoginDTO } from '../models/Auth';
+
 /**
  * GET /api/auth/google/callback?code=...
  * Intercambia el code por tokens y los guarda en memoria
@@ -44,8 +62,6 @@ export async function googleCallback(
   }
 }
 
-import { Request, Response } from 'express';
-import { getGoogleAuthUrl } from '../services/auth.service';
 /**
  * GET /api/auth/google/url
  * Devuelve la URL de autorización de Google OAuth
@@ -58,16 +74,6 @@ export function googleAuthUrl(req: Request, res: Response): void {
     res.status(500).json({ error: 'Error generating Google Auth URL' });
   }
 }
-import { plainToInstance } from 'class-transformer';
-import { validateOrReject } from 'class-validator';
-import { UserDTO } from '../models/User';
-import { LoginDTO } from '../models/Auth';
-import { createUser, HttpError } from '../services/user.service';
-import {
-  authenticateUser,
-  refreshAccessToken,
-  resetPassword,
-} from '../services/auth.service';
 
 /**
  * Maneja el registro de usuarios (POST /api/auth/register)
@@ -181,6 +187,7 @@ export async function refreshHandler(
 
 /**
  * POST /api/auth/forgot
+ * (Funcionalidad no implementada)
  */
 export async function forgotPasswordHandler(
   req: Request,
@@ -188,7 +195,6 @@ export async function forgotPasswordHandler(
 ): Promise<void> {
   try {
     const { email: _email } = req.body;
-    // TODO: Implement forgotPassword functionality or import it if available
     res.status(501).json({
       message: 'Funcionalidad no implementada: forgotPassword',
     });
@@ -199,6 +205,7 @@ export async function forgotPasswordHandler(
 
 /**
  * POST /api/auth/reset
+ * (Funcionalidad no implementada)
  */
 export async function resetPasswordHandler(
   req: Request,
@@ -212,11 +219,9 @@ export async function resetPasswordHandler(
     }
 
     await resetPassword(token, newPassword);
-    // TODO: Implement resetPassword functionality or import it if available
     res
       .status(501)
       .json({ message: 'Funcionalidad no implementada: resetPassword' });
-    // res.status(200).json({ message: 'Contraseña actualizada correctamente' });
   } catch (err: unknown) {
     if (err instanceof HttpError) {
       res.status(err.status).json({ message: err.message });
