@@ -1,5 +1,40 @@
-import { checkStore, habitStore } from '../services/habit.service';
+import { Response } from 'express';
+import { plainToInstance } from 'class-transformer';
+import { validateOrReject } from 'class-validator';
 import { Workbook } from 'exceljs';
+
+import { CreateHabitDTO, UpdateHabitDTO } from '../models/HabitDTO';
+import {
+  createHabit,
+  getHabits,
+  updateHabit,
+  deleteHabit,
+  checkHabit,
+  getHabitStreak,
+  checkStore,
+  habitStore,
+  HttpError,
+} from '../services/habit.service';
+import { AuthRequest } from '../middlewares/auth.middleware';
+
+// Función auxiliar para manejo de errores
+function handleHabitError(err: unknown, res: Response, req: AuthRequest): void {
+  if (Array.isArray(err)) {
+    const errors = err.flatMap(e =>
+      e.constraints ? Object.values(e.constraints) : [],
+    );
+    res.status(400).json({ errors });
+    return;
+  }
+  if (err instanceof HttpError) {
+    res.status(err.status).json({ message: err.message });
+    return;
+  }
+  res.status(500).json({
+    message: err instanceof Error ? err.message : req.t('error_internal'),
+  });
+}
+
 /**
  * GET /api/habits/export
  * Exporta los checks en formato CSV o Excel
@@ -8,7 +43,7 @@ export async function exportHabitsHandler(
   req: AuthRequest,
   res: Response,
 ): Promise<void> {
-  const userId = req.user!.sub as string;
+  const userId = req.user?.sub as string;
   const format = req.query.format === 'xlsx' ? 'xlsx' : 'csv';
   // Recolectar datos
   const rows: Array<{
@@ -53,21 +88,6 @@ export async function exportHabitsHandler(
   await workbook.xlsx.write(res);
   res.end();
 }
-import { Response } from 'express';
-import { plainToInstance } from 'class-transformer';
-import { validateOrReject } from 'class-validator';
-import { CreateHabitDTO, UpdateHabitDTO } from '../models/HabitDTO';
-import {
-  createHabit,
-  getHabits,
-  updateHabit,
-  deleteHabit,
-  checkHabit,
-  getHabitStreak,
-  HttpError,
-} from '../services/habit.service';
-
-import { AuthRequest } from '../middlewares/auth.middleware';
 
 /**
  * C01: POST /api/habits
@@ -80,22 +100,11 @@ export async function createHabitHandler(
     const dto = plainToInstance(CreateHabitDTO, req.body);
     await validateOrReject(dto);
 
-    const userId = req.user!.sub as string;
+    const userId = req.user?.sub as string;
     const habit = await createHabit(userId, dto);
     res.status(201).json(habit);
   } catch (err: unknown) {
-    if (Array.isArray(err)) {
-      const errors = err.flatMap(e =>
-        e.constraints ? Object.values(e.constraints) : [],
-      );
-      res.status(400).json({ errors });
-    } else if (err instanceof HttpError) {
-      res.status(err.status).json({ message: err.message });
-    } else {
-      res.status(500).json({
-        message: err instanceof Error ? err.message : req.t('error_internal'),
-      });
-    }
+    handleHabitError(err, res, req);
   }
 }
 
@@ -107,15 +116,11 @@ export async function getHabitsHandler(
   res: Response,
 ): Promise<void> {
   try {
-    const userId = req.user!.sub as string;
+    const userId = req.user?.sub as string;
     const habits = await getHabits(userId);
     res.status(200).json(habits);
   } catch (err: unknown) {
-    if (err instanceof HttpError) {
-      res.status(err.status).json({ message: err.message });
-    } else {
-      res.status(500).json({ message: req.t('error_internal') });
-    }
+    handleHabitError(err, res, req);
   }
 }
 
@@ -131,22 +136,11 @@ export async function updateHabitHandler(
     const dto = plainToInstance(UpdateHabitDTO, req.body);
     await validateOrReject(dto);
 
-    const userId = req.user!.sub as string;
+    const userId = req.user?.sub as string;
     const updated = await updateHabit(habitId, userId, dto);
     res.status(200).json(updated);
   } catch (err: unknown) {
-    if (Array.isArray(err)) {
-      const errors = err.flatMap(e =>
-        e.constraints ? Object.values(e.constraints) : [],
-      );
-      res.status(400).json({ errors });
-    } else if (err instanceof HttpError) {
-      res.status(err.status).json({ message: err.message });
-    } else {
-      res.status(500).json({
-        message: err instanceof Error ? err.message : req.t('error_internal'),
-      });
-    }
+    handleHabitError(err, res, req);
   }
 }
 
@@ -159,15 +153,11 @@ export async function deleteHabitHandler(
 ): Promise<void> {
   try {
     const { habitId } = req.params;
-    const userId = req.user!.sub as string;
+    const userId = req.user?.sub as string;
     await deleteHabit(habitId, userId);
     res.sendStatus(204);
   } catch (err: unknown) {
-    if (err instanceof HttpError) {
-      res.status(err.status).json({ message: err.message });
-    } else {
-      res.status(500).json({ message: req.t('error_internal') });
-    }
+    handleHabitError(err, res, req);
   }
 }
 
@@ -180,15 +170,11 @@ export async function checkHabitHandler(
 ): Promise<void> {
   try {
     const { habitId } = req.params;
-    const userId = req.user!.sub as string;
+    const userId = req.user?.sub as string;
     const result = await checkHabit(habitId, userId);
     res.status(200).json(result);
   } catch (err: unknown) {
-    if (err instanceof HttpError) {
-      res.status(err.status).json({ message: err.message });
-    } else {
-      res.status(500).json({ message: req.t('error_internal') });
-    }
+    handleHabitError(err, res, req);
   }
 }
 
@@ -201,14 +187,10 @@ export async function getHabitStreakHandler(
 ): Promise<void> {
   try {
     const { habitId } = req.params;
-    const userId = req.user!.sub as string;
+    const userId = req.user?.sub as string;
     const streak = await getHabitStreak(habitId, userId);
     res.status(200).json(streak);
   } catch (err: unknown) {
-    if (err instanceof HttpError) {
-      res.status(err.status).json({ message: err.message });
-    } else {
-      res.status(500).json({ message: req.t('error_internal') });
-    }
+    handleHabitError(err, res, req);
   }
 }
